@@ -197,6 +197,13 @@ function geocodeAddress(address, callback) {
                 const lat = location.position.lat;
                 const lng = location.position.lng;
 
+                const street = location.address.street;
+                const number = location.address.houseNumber;
+                const city = location.address.city;
+                const displayAddress = street + " " + number + ", " + city;
+
+                console.log(displayAddress)
+
                 if (currentMarkerType === 'start') {
                     document.getElementById('startPointCoords').value = lat + ', ' + lng;
                 } else if (currentMarkerType === 'end') {
@@ -226,8 +233,12 @@ function reverseGeocode(lat, lng, callback) {
         reverseGeocodingParameters,
         function(result) {
             const location = result.items[0];
+            const street = location.address.street;
+            const number = location.address.houseNumber;
+            const city = location.address.city;
+            const displayAddress = street + " " + number + ", " + city;
             if (location) {
-                callback(location.address.label);
+                callback(displayAddress);
             } else {
                 callback('Osoitetta ei löytynyt.');
             }
