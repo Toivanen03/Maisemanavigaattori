@@ -1,0 +1,28 @@
+.toolBox {
+    width: 300px;
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 1000;
+}
+
+
+.toolBox:hover {
+    cursor: text;
+}
+
+
+.toolBox button:hover {
+    cursor: pointer;
+}
+
+
+#map-container {
+    position: relative;
+}
+
+
+#map {
+    cursor: default;
+}
