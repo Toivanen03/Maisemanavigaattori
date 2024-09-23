@@ -3,8 +3,8 @@ let currentRouteLayer = null;
 let startMarker, endMarker;
 let currentMarkerType = null;
 
-const defaultLat = 61.19218145;
-const defaultLng = 25.99925768;
+const defaultLat = 61.23345;
+const defaultLng = 26.04378;
 
 const apiKey = 'S4YRzUa8LKgr_UV7BTPJE-uhCdcUTtOWCyjvByH_Izc';
 const platform = new H.service.Platform({
@@ -16,9 +16,10 @@ const platform = new H.service.Platform({
 document.addEventListener('DOMContentLoaded', function() {
     navigator.geolocation.getCurrentPosition(
         function(position) {
-            let userLat = position.coords.latitude;
-            let userLng = position.coords.longitude;
-            drawMap(userLat, userLng, 20);
+            //let userLat = position.coords.latitude;
+            //let userLng = position.coords.longitude;
+            //drawMap(userLat, userLng, 20);
+            drawMap(defaultLat, defaultLng, 15)
         },
         function(error) {
             drawMap(defaultLat, defaultLng, 15);
@@ -66,27 +67,27 @@ function drawMap(lat, lng, zoomLevel) {
         document.getElementById('map').style.cursor = 'crosshair';
     });
 
-    document.getElementById('startPoint').addEventListener('blur', () => {
-        document.getElementById('map').style.cursor = 'default';
-    });
-
-    document.getElementById('endPoint').addEventListener('blur', () => {
-        document.getElementById('map').style.cursor = 'default';
-    });
 
     map.on('click', function(e) {
         if (currentMarkerType) {
             const latLngString = e.latlng.lat.toFixed(5) + ', ' + e.latlng.lng.toFixed(5);
             reverseGeocode(e.latlng.lat, e.latlng.lng, function(address) {
+                let addressParts = address.split(", ");
+                let streetAndNumber = addressParts[0].split(" ");
+                if (isNaN(streetAndNumber[1])) {
+                    displayAddress = streetAndNumber[0] + ", " + addressParts[1];
+                } else {
+                    displayAddress = streetAndNumber[0] + " " + streetAndNumber[1] + ", " + addressParts[1];
+                }
                 if (currentMarkerType === 'start') {
                     if (startMarker) {
                         startMarker.setLatLng(e.latlng).update();
                     } else {
-                        startMarker = L.marker(e.latlng).addTo(map).bindPopup("Lähtöpiste").openPopup();
+                        startMarker = L.marker(e.latlng).addTo(map).bindPopup(displayAddress).openPopup();
                     }
                     document.getElementById('startPointCoords').value = latLngString;
                     if (address) {
-                        document.getElementById('startPoint').value = address;
+                        document.getElementById('startPoint').value = displayAddress;
                     } else {
                         document.getElementById('startPoint').value = latLngString;
                     }
@@ -95,11 +96,11 @@ function drawMap(lat, lng, zoomLevel) {
                     if (endMarker) {
                         endMarker.setLatLng(e.latlng).update();
                     } else {
-                        endMarker = L.marker(e.latlng).addTo(map).bindPopup("Määränpää").openPopup();
+                        endMarker = L.marker(e.latlng).addTo(map).bindPopup(displayAddress).openPopup();
                     }
                     document.getElementById('endPointCoords').value = latLngString;
                     if (address) {
-                        document.getElementById('endPoint').value = address;
+                        document.getElementById('endPoint').value = displayAddress;
                     } else {
                         document.getElementById('endPoint').value = latLngString;
                     }
