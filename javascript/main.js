@@ -16,13 +16,21 @@ const platform = new H.service.Platform({
 document.addEventListener('DOMContentLoaded', function() {
     navigator.geolocation.getCurrentPosition(
         function(position) {
-            //let userLat = position.coords.latitude;
-            //let userLng = position.coords.longitude;
-            //drawMap(userLat, userLng, 20);
-            drawMap(defaultLat, defaultLng, 15)
+            let userLat = position.coords.latitude;
+            let userLng = position.coords.longitude;
+            drawMap(userLat, userLng, 20);
+            const latLngString = `${userLat.toFixed(5)}, ${userLng.toFixed(5)}`;
+            document.getElementById('startPointCoords').value = latLngString;
+            reverseGeocode(userLat, userLng, function(address) {
+                document.getElementById('startPoint').value = address;
+                startMarker = L.marker([userLat, userLng]).addTo(map).bindPopup(address).openPopup();
+            });
         },
         function(error) {
             drawMap(defaultLat, defaultLng, 15);
+            const defaultLatLngString = `${defaultLat}, ${defaultLng}`;
+            document.getElementById('startPointCoords').value = defaultLatLngString;
+            document.getElementById('startPoint').value = 'Oletussijainti';
         }
     );
 
@@ -43,6 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
 
 
 
@@ -197,14 +206,6 @@ function geocodeAddress(address, callback) {
                 const location = data.items[0];
                 const lat = location.position.lat;
                 const lng = location.position.lng;
-
-                const street = location.address.street;
-                const number = location.address.houseNumber;
-                const city = location.address.city;
-                const displayAddress = street + " " + number + ", " + city;
-
-                console.log(displayAddress)
-
                 if (currentMarkerType === 'start') {
                     document.getElementById('startPointCoords').value = lat + ', ' + lng;
                 } else if (currentMarkerType === 'end') {
