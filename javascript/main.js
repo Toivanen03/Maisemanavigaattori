@@ -13,7 +13,16 @@ const platform = new H.service.Platform({
 
 
 
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Lataa ja prosessoi JSON-tiedosto
+    fetch('mapdata/heinola.json')
+        .then(response => response.json())
+        .then(data => {
+            filteredWays = processMapData(data);
+        })
+        .catch(err => console.error('Virhe ladattaessa JSON-tiedostoa:', err));
+
     navigator.geolocation.getCurrentPosition(
         function(position) {
             let userLat = position.coords.latitude;
@@ -28,8 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         function(error) {
             drawMap(defaultLat, defaultLng, 15);
-            const defaultLatLngString = `${defaultLat}, ${defaultLng}`;
-            document.getElementById('startPointCoords').value = defaultLatLngString;
+            document.getElementById('startPointCoords').value = `${defaultLat}, ${defaultLng}`;
             document.getElementById('startPoint').value = 'Oletussijainti';
         }
     );
@@ -37,13 +45,13 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('findRoute').addEventListener('click', function() {
         let start = document.getElementById('startPoint').value;
         let endAddress = document.getElementById('endPoint').value;
-    
+
         if (start && endAddress) {
             geocodeAddress(endAddress, function(endLat, endLng) {
                 let startCoords = document.getElementById('startPointCoords').value.split(',').map(coord => parseFloat(coord.trim()));
                 let startLat = startCoords[0];
                 let startLng = startCoords[1];
-    
+
                 getRoute(startLat, startLng, endLat, endLng);
             });
         } else {
@@ -76,18 +84,16 @@ function drawMap(lat, lng, zoomLevel) {
         document.getElementById('map').style.cursor = 'crosshair';
     });
 
-
     map.on('click', function(e) {
         if (currentMarkerType) {
             const latLngString = e.latlng.lat.toFixed(5) + ', ' + e.latlng.lng.toFixed(5);
             reverseGeocode(e.latlng.lat, e.latlng.lng, function(address) {
                 let addressParts = address.split(", ");
                 let streetAndNumber = addressParts[0].split(" ");
-                if (isNaN(streetAndNumber[1])) {
-                    displayAddress = streetAndNumber[0] + ", " + addressParts[1];
-                } else {
-                    displayAddress = streetAndNumber[0] + " " + streetAndNumber[1] + ", " + addressParts[1];
-                }
+                let displayAddress = isNaN(streetAndNumber[1]) ? 
+                    streetAndNumber[0] + ", " + addressParts[1] : 
+                    streetAndNumber[0] + " " + streetAndNumber[1] + ", " + addressParts[1];
+                
                 if (currentMarkerType === 'start') {
                     if (startMarker) {
                         startMarker.setLatLng(e.latlng).update();
@@ -95,11 +101,7 @@ function drawMap(lat, lng, zoomLevel) {
                         startMarker = L.marker(e.latlng).addTo(map).bindPopup(displayAddress).openPopup();
                     }
                     document.getElementById('startPointCoords').value = latLngString;
-                    if (address) {
-                        document.getElementById('startPoint').value = displayAddress;
-                    } else {
-                        document.getElementById('startPoint').value = latLngString;
-                    }
+                    document.getElementById('startPoint').value = address || latLngString;
 
                 } else if (currentMarkerType === 'end') {
                     if (endMarker) {
@@ -108,11 +110,7 @@ function drawMap(lat, lng, zoomLevel) {
                         endMarker = L.marker(e.latlng).addTo(map).bindPopup(displayAddress).openPopup();
                     }
                     document.getElementById('endPointCoords').value = latLngString;
-                    if (address) {
-                        document.getElementById('endPoint').value = displayAddress;
-                    } else {
-                        document.getElementById('endPoint').value = latLngString;
-                    }
+                    document.getElementById('endPoint').value = address || latLngString;
                 }
                 currentMarkerType = null;
                 document.getElementById('map').style.cursor = 'default';
@@ -120,6 +118,7 @@ function drawMap(lat, lng, zoomLevel) {
         }
     });
 }
+
 
 
 
@@ -133,66 +132,32 @@ function processMapData(data) {
 
 
 
-function visualizeFilteredWays() {
-    if (!map) {
-        return;
-    }
-
-    let filteredWays = window.filteredWays;
-    if (!filteredWays || filteredWays.length === 0) {
-        return;
-    }
-
-    filteredWays.forEach(way => {
-        let latlngs = way.geometry.map(point => [point.lat, point.lon]);
-        L.polyline(latlngs, { color: 'blue' }).addTo(map);
-    });
-}
-
-
 
 function getRoute(startLat, startLng, endLat, endLng) {
-    if (!startLat || !startLng || !endLat || !endLng) {
-        return;
-    }
-    let url = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`;
+    let url = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson&alternatives=3`;
 
     fetch(url)
         .then(response => response.json())
         .then(data => {
             if (data.routes && data.routes.length > 0) {
                 let route = data.routes[0];
+                let geojsonData = route.geometry;
+
                 if (currentRouteLayer) {
                     map.removeLayer(currentRouteLayer);
                 }
 
-                currentRouteLayer = L.geoJSON(route.geometry).addTo(map);
-                map.fitBounds(currentRouteLayer.getBounds());
-                if (isRouteValid(route.geometry)) {
-                    visualizeFilteredWays();
+                currentRouteLayer = L.geoJSON(geojsonData).addTo(map);
+
+                if (geojsonData.coordinates.length > 0) {
+                    map.fitBounds(currentRouteLayer.getBounds());
                 }
             }
         })
-        .catch(err => console.error('Reitin hakemisessa tapahtui virhe:', err));
+        .catch(err => console.error('Error fetching route:', err));
 }
 
 
-
-function isRouteValid(routeGeometry) {
-    if (!window.filteredWays || window.filteredWays.length === 0) {
-        return false;
-    }
-
-    let routeLatLngs = routeGeometry.coordinates.map(coord => [coord[1], coord[0]]);
-    let validWays = window.filteredWays.flatMap(way => 
-        way.geometry.map(p => [p.lat, p.lon])
-    );
-
-    let isValid = routeLatLngs.every(point => {
-        return validWays.some(p => Math.abs(p[0] - point[0]) < 0.0001 && Math.abs(p[1] - point[1]) < 0.0001);
-    });
-    return isValid;
-}
 
 
 
@@ -217,35 +182,29 @@ function geocodeAddress(address, callback) {
                 callback(null, null);
             }
         })
-        .catch(error => {
-            console.error("Osoitetta ei löytynyt.")
+        .catch(() => {
+            console.error("Osoitetta ei löytynyt.");
             callback(null, null);
         });
 }
 
 
 
+
 function reverseGeocode(lat, lng, callback) {
     const geocoder = platform.getSearchService();
-    const reverseGeocodingParameters = {
-        at: `${lat},${lng}`
-    };
+    const reverseGeocodingParameters = { at: `${lat},${lng}` };
 
-    geocoder.reverseGeocode(
-        reverseGeocodingParameters,
+    geocoder.reverseGeocode(reverseGeocodingParameters,
         function(result) {
             const location = result.items[0];
             const street = location.address.street;
             const number = location.address.houseNumber;
             const city = location.address.city;
             const displayAddress = street + " " + number + ", " + city;
-            if (location) {
-                callback(displayAddress);
-            } else {
-                callback('Osoitetta ei löytynyt.');
-            }
+            callback(location ? displayAddress : 'Osoitetta ei löytynyt.');
         },
-        function(error) {
+        function() {
             callback(null);
         }
     );
