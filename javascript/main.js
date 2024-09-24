@@ -1,21 +1,18 @@
-let map;
-let currentRouteLayer = null;
-let startMarker, endMarker;
-let currentMarkerType = null;
+let map;                                                                    // Alustetaan muuttujat:    - Karttapohja
+let currentRouteLayer = null;                                               //                          - Reittikerros
+let startMarker, endMarker;                                                 //                          - Alku- ja loppumerkit
+let currentMarkerType = null;                                               //                          - Merkin tyyppi (myöhemmin start tai end)
 
-const defaultLat = 61.23345;
-const defaultLng = 26.04378;
-
-const apiKey = 'S4YRzUa8LKgr_UV7BTPJE-uhCdcUTtOWCyjvByH_Izc';
-const platform = new H.service.Platform({
+const apiKey = 'S4YRzUa8LKgr_UV7BTPJE-uhCdcUTtOWCyjvByH_Izc';               // HERE-palvelun API-key, käytetään geokoodauksessa
+const platform = new H.service.Platform({                                   // Geokoodauksen sisältävä luokka. HERE maps-kirjaston objekti H sisältyy HTML-koodissa ladattavaan scriptiin
     apikey: apiKey
 });
 
+const defaultLat = 61.23345;                                                // Oletussijainti (ABC Heinola). Käytetään, mikäli selaimelle ei ole annettu lupaa sijainnin jakamiseen
+const defaultLng = 26.04378;
 
 
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Lataa ja prosessoi JSON-tiedosto
+document.addEventListener('DOMContentLoaded', function() {                  // Haetaan Overpass Turbolla luotu JSON-data sallituista teistä (pienet tiet ja kadut Heinolan keskustan alueella)
     fetch('mapdata/heinola.json')
         .then(response => response.json())
         .then(data => {
@@ -23,36 +20,61 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(err => console.error('Virhe ladattaessa JSON-tiedostoa:', err));
 
-    navigator.geolocation.getCurrentPosition(
+    navigator.geolocation.getCurrentPosition(                               // Pyydetään selaimelta sijaintitieto, edellyttää käyttäjän myöntämää lupaa
         function(position) {
             let userLat = position.coords.latitude;
             let userLng = position.coords.longitude;
             drawMap(userLat, userLng, 20);
             const latLngString = `${userLat.toFixed(5)}, ${userLng.toFixed(5)}`;
             document.getElementById('startPointCoords').value = latLngString;
-            reverseGeocode(userLat, userLng, function(address) {
+            reverseGeocode(userLat, userLng, function(address) {            // Saatu sijainti geokoodataan käänteisesti ja asetetaan osoite tekstinsyöttökenttään ja markeriin
                 document.getElementById('startPoint').value = address;
                 startMarker = L.marker([userLat, userLng]).addTo(map).bindPopup(address).openPopup();
             });
         },
-        function(error) {
+        function(error) {                                                   // Jos sijaintia ei saada, siitä kerrotaan käyttäjälle ja asetetaan ylempänä määritetty oletussijainti
             drawMap(defaultLat, defaultLng, 15);
             document.getElementById('startPointCoords').value = `${defaultLat}, ${defaultLng}`;
-            document.getElementById('startPoint').value = 'Oletussijainti';
+            reverseGeocode(defaultLat, defaultLng, function(address) {
+                document.getElementById('startPoint').value = "Oletussijainti";
+                startMarker = L.marker([defaultLat, defaultLng]).addTo(map).bindPopup(`${address}<br><div style="text-align: center;"><i>(Sijaintia ei saatu)</i></div>`).openPopup();
+            });
         }
     );
 
-    document.getElementById('findRoute').addEventListener('click', function() {
+    document.getElementById('startPoint').addEventListener('blur', function() {     // Tapahtumakuuntelija tarkistaa lähtöpaikan syöttökentästä poistumisen
+        const startAddress = document.getElementById('startPoint').value;
+        geocodeAddress(startAddress, function(startLat, startLng) {
+            if (startLat && startLng) {
+                document.getElementById('startPointCoords').value = startLat + ', ' + startLng;
+            }
+        });
+    });
+    document.getElementById('endPoint').addEventListener('blur', function() {       // Tapahtumakuuntelija tarkistaa määränpään syöttökentästä poistumisen
+        const endAddress = document.getElementById('endPoint').value;
+        geocodeAddress(endAddress, function(endLat, endLng) {
+            if (endLat && endLng) {
+                document.getElementById('endPointCoords').value = endLat + ', ' + endLng;
+            }
+        });
+    });
+
+    document.getElementById('findRoute').addEventListener('click', function() {     // Tapahtumakuuntelija käsittelee reittihakupainikkeen
         let start = document.getElementById('startPoint').value;
-        let endAddress = document.getElementById('endPoint').value;
-
-        if (start && endAddress) {
-            geocodeAddress(endAddress, function(endLat, endLng) {
-                let startCoords = document.getElementById('startPointCoords').value.split(',').map(coord => parseFloat(coord.trim()));
-                let startLat = startCoords[0];
-                let startLng = startCoords[1];
-
-                getRoute(startLat, startLng, endLat, endLng);
+        let endAddress = document.getElementById('endPoint').value; 
+        if (start && endAddress) {                                                  // Kun osoitteet on saatu, geokoodataan osoite koordinaateiksi
+            geocodeAddress(start, function(startLat, startLng) {
+                if (startLat && startLng) {
+                    geocodeAddress(endAddress, function(endLat, endLng) {
+                        if (endLat && endLng) {                                     // Kun geokoodaus on suoritettu, kutsutaan reittihakua
+                            getRoute(startLat, startLng, endLat, endLng);
+                        } else {
+                            alert("Määränpään koordinaatteja ei löytynyt.");        // Virheenkäsittely
+                        }
+                    });
+                } else {
+                    alert("Lähtöpaikan koordinaatteja ei löytynyt.");
+                }
             });
         } else {
             alert("Aseta sekä lähtöpiste että määränpää.");
@@ -64,17 +86,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 function drawMap(lat, lng, zoomLevel) {
-    if (map) {
+    if (map) {                                                              // Jos sivulla on jo kartta, estetään päällekkäisyys poistamalla vanha kartta ennen uuden piirtoa
         map.remove();
     }
 
-    map = L.map('map').setView([lat, lng], zoomLevel);
+    map = L.map('map').setView([lat, lng], zoomLevel);                      // Luodaan karttapohja
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {     // Asetetaan karttakuvat karttapohjalle
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    document.getElementById('startPoint').addEventListener('focus', () => {
+    document.getElementById('startPoint').addEventListener('focus', () => { // Tapahtumakuuntelut, joilla kursori muutetaan ristiksi ja määritetään syöttökentän perusteella, kumpaa pistettä ollaan asettamassa
         currentMarkerType = 'start';
         document.getElementById('map').style.cursor = 'crosshair';
     });
@@ -84,23 +106,23 @@ function drawMap(lat, lng, zoomLevel) {
         document.getElementById('map').style.cursor = 'crosshair';
     });
 
-    map.on('click', function(e) {
-        if (currentMarkerType) {
-            const latLngString = e.latlng.lat.toFixed(5) + ', ' + e.latlng.lng.toFixed(5);
-            reverseGeocode(e.latlng.lat, e.latlng.lng, function(address) {
-                let addressParts = address.split(", ");
-                let streetAndNumber = addressParts[0].split(" ");
-                let displayAddress = isNaN(streetAndNumber[1]) ? 
-                    streetAndNumber[0] + ", " + addressParts[1] : 
-                    streetAndNumber[0] + " " + streetAndNumber[1] + ", " + addressParts[1];
-                
-                if (currentMarkerType === 'start') {
+    map.on('click', function(e) {                           // Tarkistetaan klikkaustapahtumat kartan päällä
+        if (currentMarkerType) {                            // Mikäli syöttökenttää on klikattu ensin, currentMarkerType on arvoltaan joko "start" tai "end"
+            const latLngString = e.latlng.lat.toFixed(5) + ', ' + e.latlng.lng.toFixed(5);      // Tallennetaan muuttujaan kartalta koordinaatit ja pyöristetään
+            reverseGeocode(e.latlng.lat, e.latlng.lng, function(address) {      // Muunnetaan koordinaatit osoitteeksi
+                let addressParts = address.split(", ");                         // Pilkotaan osoite paloiksi. Tämä helpottaa osoitteen muotoilua eri tarkoituksiin
+                let streetAndNumber = addressParts[0].split(" ");               // Katu ja numero. Numero saattaa puuttua eli olla undefined
+                let displayAddress = isNaN(streetAndNumber[1]) ?                // Mikäli numeroa ei ole,
+                    streetAndNumber[0] + ", " + addressParts[1] :               // displayAddress-muuttujaan tallennetaan kadunnimi ja kaupunki.
+                    streetAndNumber[0] + " " + streetAndNumber[1] + ", " + addressParts[1]; // Jos numero löytyy, displayAddress saa arvon "kadunnimi numero, kaupunki"
+
+                if (currentMarkerType === 'start') {        // Lohkossa luodaan valitun tekstikentän perusteella merkki, asetetaan se kartalle ja näytetään osoite popup-ikkunassa
                     if (startMarker) {
                         startMarker.setLatLng(e.latlng).update();
                     } else {
                         startMarker = L.marker(e.latlng).addTo(map).bindPopup(displayAddress).openPopup();
                     }
-                    document.getElementById('startPointCoords').value = latLngString;
+                    document.getElementById('startPointCoords').value = latLngString;       // Asetetaan merkin koordinaatit piilotettuun syöttökenttään
                     document.getElementById('startPoint').value = address || latLngString;
 
                 } else if (currentMarkerType === 'end') {
@@ -112,8 +134,7 @@ function drawMap(lat, lng, zoomLevel) {
                     document.getElementById('endPointCoords').value = latLngString;
                     document.getElementById('endPoint').value = address || latLngString;
                 }
-                currentMarkerType = null;
-                document.getElementById('map').style.cursor = 'default';
+                document.getElementById('map').style.cursor = 'default';                    // Lopuksi palautetaan kursori normaaliksi
             });
         }
     });
@@ -122,7 +143,7 @@ function drawMap(lat, lng, zoomLevel) {
 
 
 
-function processMapData(data) {
+function processMapData(data) {                         // Rakenteilla, käytetään reittien suodatukseen
     return data.elements.filter(element => {
         return element.type === 'way' &&
             element.tags.highway &&
@@ -133,79 +154,83 @@ function processMapData(data) {
 
 
 
-function getRoute(startLat, startLng, endLat, endLng) {
+function getRoute(startLat, startLng, endLat, endLng) {     // Reitinhakufunktio lähettää hakupyynnön OSRM-palvelimelle. Osoitteen muuttujissa on haettavat koordinaatit. Lisäparametrilla määritetään haettavaksi kolme reittivaihtoehtoa.
     let url = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson&alternatives=3`;
-
-    fetch(url)
+    fetch(url)                                              // Haetaan pyydetty data
         .then(response => response.json())
         .then(data => {
             if (data.routes && data.routes.length > 0) {
                 let route = data.routes[0];
-                let geojsonData = route.geometry;
+                let geojsonData = route.geometry;           // Muuttuja sisältää reitin geometrian, eli koordinaattitiedot
 
-                if (currentRouteLayer) {
+                if (currentRouteLayer) {                    // Olemassaoleva karttakerros poistetaan, jos reittiä on jo haettu aiemmin
                     map.removeLayer(currentRouteLayer);
                 }
 
-                currentRouteLayer = L.geoJSON(geojsonData).addTo(map);
+                currentRouteLayer = L.geoJSON(geojsonData).addTo(map);      // Asetetaan reittikerros kartalle
 
                 if (geojsonData.coordinates.length > 0) {
                     map.fitBounds(currentRouteLayer.getBounds());
                 }
             }
         })
-        .catch(err => console.error('Error fetching route:', err));
+        .catch(err => console.error('Virhe:', err));        // Tulostetaan virhe konsoliin, mikäli reittiä ei löydy
 }
 
 
 
 
-
 function geocodeAddress(address, callback) {
-    const url = `https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(address)}&apiKey=${apiKey}`;
+    if (address !== "") {                                           // Varmistetaan, ettei osoite ole tyhjä ja haetaan koordinaatit HERE-palvelimelta. Hakupyynnössä on haettava osoite sekä palveluun rekisteröityessä saatu API-avain
+        const url = `https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(address)}&apiKey=${apiKey}`;
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.items && data.items.length > 0) {          // Mikäli pyyntö onnistuu ja vastaus ei ole tyhjä, tallennetaan koordinaatit muuttujiin ja asetetaan arvot piilotettuihin syöttökenttiin
+                    const location = data.items[0];
+                    const lat = location.position.lat;
+                    const lng = location.position.lng;
+                    if (currentMarkerType === 'start') {
+                        document.getElementById('startPointCoords').value = lat + ', ' + lng;
+                    } else if (currentMarkerType === 'end') {
+                        document.getElementById('endPointCoords').value = lat + ', ' + lng;
+                    }
 
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            if (data.items && data.items.length > 0) {
-                const location = data.items[0];
-                const lat = location.position.lat;
-                const lng = location.position.lng;
-                if (currentMarkerType === 'start') {
-                    document.getElementById('startPointCoords').value = lat + ', ' + lng;
-                } else if (currentMarkerType === 'end') {
-                    document.getElementById('endPointCoords').value = lat + ', ' + lng;
+                    callback(lat, lng);                             // Palautetaan koordinaatit
+                } else {
+                    callback(null, null);
                 }
-
-                callback(lat, lng);
-            } else {
+            })
+            .catch(() => {                                          // Virheenkäsittely
+                console.error("Osoitetta ei löytynyt.");
                 callback(null, null);
-            }
-        })
-        .catch(() => {
-            console.error("Osoitetta ei löytynyt.");
-            callback(null, null);
-        });
+            });
+    }
 }
 
 
 
 
 function reverseGeocode(lat, lng, callback) {
-    const geocoder = platform.getSearchService();
-    const reverseGeocodingParameters = { at: `${lat},${lng}` };
+    const geocoder = platform.getSearchService();                   // Luodaan käänteisen geokoodauksen haku
+    const reverseGeocodingParameters = { at: `${lat},${lng}` };     // Määritetään hakuparametrit
 
     geocoder.reverseGeocode(reverseGeocodingParameters,
-        function(result) {
-            const location = result.items[0];
+        function(result) {                                          // Funktio palauttaa osoitteen saamiensa koordinaattien perusteella
+            const location = result.items[0];                       // Osoite pilkotaan ja muotoillaan
             const street = location.address.street;
             const number = location.address.houseNumber;
             const city = location.address.city;
-            const displayAddress = street + " " + number + ", " + city;
-            callback(location ? displayAddress : 'Osoitetta ei löytynyt.');
+            let displayAddress;
+            if (isNaN(number)) {
+                displayAddress = street + ", " + city;
+            } else {
+                displayAddress = street + " " + number + ", " + city;
+            }
+            callback(location ? displayAddress : 'Osoitetta ei löytynyt.');     // Palautetaan sijaintikoordinaatit tai virheellinen vastaus
         },
         function() {
-            callback(null);
+            callback(null);                                         // Haku epäonnistui
         }
     );
 }
