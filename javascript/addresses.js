@@ -1,5 +1,6 @@
 // Pyykkönen
 // osoitteiden autom.ehdotus
+import {apiKeyHERE} from "../javascript/config.js";
 
 const startPointInput = document.getElementById('startPoint');
 const endPointInput = document.getElementById('endPoint');
@@ -8,7 +9,7 @@ const endSuggestionsList = document.getElementById('endSuggestionsList');
 
 // haetaan herestä osoitteet (tässä vielä hiomista jotta saadaan vain suomen osoitteet)
 function fetchSuggestions(query, suggestionsList) {
-    const url = `https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(query)}&apiKey=${apiKey}`;
+    const url = `https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(query)}&apiKey=${apiKeyHERE}`;
 
     fetch(url)
         .then(response => response.json())
