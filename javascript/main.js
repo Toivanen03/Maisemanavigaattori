@@ -3,13 +3,15 @@ let currentRouteLayer = null;                                               //  
 let startMarker, endMarker;                                                 //                          - Alku- ja loppumerkit
 let currentMarkerType = null;                                               //                          - Merkin tyyppi (myöhemmin start tai end)
 
-const apiKey = 'S4YRzUa8LKgr_UV7BTPJE-uhCdcUTtOWCyjvByH_Izc';               // HERE-palvelun API-key, käytetään geokoodauksessa
+const apiKey = '5b3ce3597851110001cf6248854948ff45974bdbb781eef5997e8ba0';  // OpenRouteService API-key
+const apiKeyHERE = 'S4YRzUa8LKgr_UV7BTPJE-uhCdcUTtOWCyjvByH_Izc';           // HERE-palvelun API-key, käytetään geokoodauksessa
 const platform = new H.service.Platform({                                   // Geokoodauksen sisältävä luokka. HERE maps-kirjaston objekti H sisältyy HTML-koodissa ladattavaan scriptiin
     apikey: apiKey
 });
 
 const defaultLat = 61.23345;                                                // Oletussijainti (ABC Heinola). Käytetään, mikäli selaimelle ei ole annettu lupaa sijainnin jakamiseen
 const defaultLng = 26.04378;
+let geocodedStartAddress, geocodedDestinationAddress;
 
 
 document.addEventListener('DOMContentLoaded', function() {                  // Haetaan Overpass Turbolla luotu JSON-data sallituista teistä (pienet tiet ja kadut Heinolan keskustan alueella)
@@ -47,6 +49,9 @@ document.addEventListener('DOMContentLoaded', function() {                  // H
         geocodeAddress(startAddress, function(startLat, startLng) {
             if (startLat && startLng) {
                 document.getElementById('startPointCoords').value = startLat + ', ' + startLng;
+                reverseGeocode(startLat, startLng, function(formattedAddress) {
+                    geocodedStartAddress = formattedAddress;
+                });
             }
         });
     });
@@ -55,6 +60,9 @@ document.addEventListener('DOMContentLoaded', function() {                  // H
         geocodeAddress(endAddress, function(endLat, endLng) {
             if (endLat && endLng) {
                 document.getElementById('endPointCoords').value = endLat + ', ' + endLng;
+                reverseGeocode(endLat, endLng, function(formattedAddress) {
+                    geocodedDestinationAddress = formattedAddress;
+                });
             }
         });
     });
@@ -143,7 +151,7 @@ function drawMap(lat, lng, zoomLevel) {
 
 
 
-function processMapData(data) {                         // Rakenteilla, käytetään reittien suodatukseen
+function processMapData(data) {                         // Rakenteilla, käytetään reittien suodatukseen 
     return data.elements.filter(element => {
         return element.type === 'way' &&
             element.tags.highway &&
@@ -154,13 +162,14 @@ function processMapData(data) {                         // Rakenteilla, käytet�
 
 
 
-function getRoute(startLat, startLng, endLat, endLng) {     // Reitinhakufunktio lähettää hakupyynnön OSRM-palvelimelle. Osoitteen muuttujissa on haettavat koordinaatit. Lisäparametrilla määritetään haettavaksi kolme reittivaihtoehtoa.
-    let url = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson&alternatives=3`;
+function getRoute(startLat, startLng, endLat, endLng) {     // Reitinhakufunktio lähettää hakupyynnön ORS-palvelimelle. Osoitteen muuttujissa on haettavat koordinaatit sekä APIkey. Lisäparametrilla määritetään haettavaksi kolme reittivaihtoehtoa.
+    const url = `https://api.openrouteservice.org/v2/directions/driving-car?start=${startLng},${startLat}&end=${endLng},${endLat}&api_key=${apiKey}`;    
     fetch(url)                                              // Haetaan pyydetty data
         .then(response => response.json())
         .then(data => {
-            if (data.routes && data.routes.length > 0) {
-                let route = data.routes[0];
+            
+            if (data.features && data.features.length > 0) {
+                let route = data.features[0];
                 let geojsonData = route.geometry;           // Muuttuja sisältää reitin geometrian, eli koordinaattitiedot
 
                 if (currentRouteLayer) {                    // Olemassaoleva karttakerros poistetaan, jos reittiä on jo haettu aiemmin
@@ -169,12 +178,20 @@ function getRoute(startLat, startLng, endLat, endLng) {     // Reitinhakufunktio
 
                 currentRouteLayer = L.geoJSON(geojsonData).addTo(map);      // Asetetaan reittikerros kartalle
 
+                // tähän reitin pituus?
+                const distance = route.properties.segments[0].distance;
+                const routeDistanceDiv = document.getElementById('routeDistance');
+                routeDistanceDiv.textContent = `Matka: ${(distance / 1000).toFixed(2)} km`; // Muokattu näyttämään oikein -ST
+                routeDistanceDiv.style.display = 'block';
+                routeDistanceDiv.style.textAlign = 'center';
+
+
                 if (geojsonData.coordinates.length > 0) {
                     map.fitBounds(currentRouteLayer.getBounds());
-                }
+                }                
             }
         })
-        .catch(err => console.error('Virhe:', err));        // Tulostetaan virhe konsoliin, mikäli reittiä ei löydy
+        .catch(err => console.error('Virhe:', err));        // Tulostetaan virhe konsoliin, mikäli reittiä ei löydy   
 }
 
 
@@ -182,7 +199,7 @@ function getRoute(startLat, startLng, endLat, endLng) {     // Reitinhakufunktio
 
 function geocodeAddress(address, callback) {
     if (address !== "") {                                           // Varmistetaan, ettei osoite ole tyhjä ja haetaan koordinaatit HERE-palvelimelta. Hakupyynnössä on haettava osoite sekä palveluun rekisteröityessä saatu API-avain
-        const url = `https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(address)}&apiKey=${apiKey}`;
+        const url = `https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(address)}&apiKey=${apiKeyHERE}`;
         fetch(url)
             .then(response => response.json())
             .then(data => {
@@ -212,25 +229,27 @@ function geocodeAddress(address, callback) {
 
 
 function reverseGeocode(lat, lng, callback) {
-    const geocoder = platform.getSearchService();                   // Luodaan käänteisen geokoodauksen haku
-    const reverseGeocodingParameters = { at: `${lat},${lng}` };     // Määritetään hakuparametrit
-
-    geocoder.reverseGeocode(reverseGeocodingParameters,
-        function(result) {                                          // Funktio palauttaa osoitteen saamiensa koordinaattien perusteella
-            const location = result.items[0];                       // Osoite pilkotaan ja muotoillaan
-            const street = location.address.street;
-            const number = location.address.houseNumber;
-            const city = location.address.city;
-            let displayAddress;
-            if (isNaN(number)) {
-                displayAddress = street + ", " + city;
+    const url = `https://revgeocode.search.hereapi.com/v1/revgeocode?at=${lat},${lng}&apiKey=${apiKeyHERE}`;
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.items && data.items.length > 0) {
+                const location = data.items[0];                     // Osoite pilkotaan ja muotoillaan
+                const street = location.address.street;
+                const number = location.address.houseNumber;
+                const city = location.address.city;
+                let displayAddress;
+                if (isNaN(number)) {                                // Tarkistetaan mahdollinen undefined tilanteessa, jossa talonnumeroa ei saada
+                    displayAddress = street + ", " + city;          // ja yhdistetään osoite sen mukaisesti
+                } else {
+                    displayAddress = street + " " + number + ", " + city;
+                }
+                callback(displayAddress);
             } else {
-                displayAddress = street + " " + number + ", " + city;
+                callback('Osoitetta ei löytynyt.');
             }
-            callback(location ? displayAddress : 'Osoitetta ei löytynyt.');     // Palautetaan sijaintikoordinaatit tai virheellinen vastaus
-        },
-        function() {
+        })
+        .catch(() => {
             callback(null);                                         // Haku epäonnistui
-        }
-    );
+        });
 }
