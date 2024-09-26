@@ -10,26 +10,22 @@
     z-index: 1000;
 }
 
-
 .toolBox:hover {
     cursor: text;
 }
-
 
 .toolBox button:hover {
     cursor: pointer;
 }
 
-
 #map-container {
-    position: relative;
-   
+    position: relative;  
 }
-
 
 #map {
     cursor: default;
     height: 100vh;
+    
 }
 
 .settings{

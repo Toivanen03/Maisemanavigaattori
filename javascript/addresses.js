@@ -1,24 +1,19 @@
 // Pyykkönen
 // osoitteiden autom.ehdotus
 
-
 const startPointInput = document.getElementById('startPoint');
 const endPointInput = document.getElementById('endPoint');
-const suggestionsList = document.getElementById('suggestionsList');
-
-startPointInput.addEventListener('input', () => handleInput(startPointInput));
-endPointInput.addEventListener('input', () => handleInput(endPointInput));
-
-
+const startSuggestionsList = document.getElementById('suggestionsList');
+const endSuggestionsList = document.getElementById('endSuggestionsList');
 
 // haetaan herestä osoitteet (tässä vielä hiomista jotta saadaan vain suomen osoitteet)
-function fetchSuggestions(query) {
+function fetchSuggestions(query, suggestionsList) {
     const url = `https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(query)}&apiKey=${apiKey}`;
 
     fetch(url)
         .then(response => response.json())
         .then(data => {
-            displaySuggestions(data.items);
+            displaySuggestions(data.items, suggestionsList);
         })
         .catch(error => {
             console.error('Virhe osoitteiden hakemisessa:', error);
@@ -26,24 +21,36 @@ function fetchSuggestions(query) {
         });
 }
 
+
 // ehdotukset tulee näkyviin mikäli syötetään enemmän kuin 2 kirjainta
-const handleInput = (input) => {
-    const query = input.value;
+// lähtöpiste
+startPointInput.addEventListener('input', function() {
+    const query = startPointInput.value;
     if (query.length > 2) {
-        fetchSuggestions(query);
+        fetchSuggestions(query, startSuggestionsList);
     } else {
-        suggestionsList.innerHTML = '';
+        startSuggestionsList.innerHTML = '';
     }
-};
+});
+// määränpää
+endPointInput.addEventListener('input', function() {
+    const query = endPointInput.value;
+    if (query.length > 2) {
+        fetchSuggestions(query, endSuggestionsList);
+    } else {
+           endSuggestionsList.innerHTML = '';
+    }
+});
+
 
 
 // näytetään osoitteet listana allekkain, tässä myös valitaan klikattu osoite
-function displaySuggestions(suggestions) {
+function displaySuggestions(suggestions, suggestionsList) {
     suggestionsList.innerHTML = '';
 
     if (suggestions.length === 0) {
         return;
-        }
+    }
 
     suggestions.forEach(suggestion => {
         const li = document.createElement('li');
@@ -51,12 +58,12 @@ function displaySuggestions(suggestions) {
         li.textContent = suggestion.address.label;
 
         li.addEventListener('click', function() {
-            if (document.activeElement === startPointInput) {
+            suggestionsList.innerHTML = '';
+            if (suggestionsList === startSuggestionsList) {
                 startPointInput.value = suggestion.address.label;
-            } else if (document.activeElement === endPointInput) {
+            } else {
                 endPointInput.value = suggestion.address.label;
             }
-            suggestionsList.innerHTML = '';
         });
 
         suggestionsList.appendChild(li);
@@ -65,8 +72,11 @@ function displaySuggestions(suggestions) {
 
 // klikkaamalla muualle osoite-ehdotus poistuu
 document.addEventListener('click', function(event) {
-    if (!startPointInput.contains(event.target) && !endPointInput.contains(event.target) && !suggestionsList.contains(event.target)) {
-        suggestionsList.innerHTML = '';
+    if (!startPointInput.contains(event.target) && !startSuggestionsList.contains(event.target)) {
+        startSuggestionsList.innerHTML = '';
+    }
+    if (!endPointInput.contains(event.target) && !endSuggestionsList.contains(event.target)) {
+        endSuggestionsList.innerHTML = '';
     }
 });
 
