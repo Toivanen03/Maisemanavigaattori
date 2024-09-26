@@ -15,28 +15,42 @@
 </head>
 <body>
 
+    <div class="settings">
+        <img id="settings-icon" src="images/settings.png" alt="settings">
+    </div>
+    <div id="settings-panel" class="settings-panel">
+        <p>Setting 1</p>
+        <p>Setting 2</p>
+    </div>
+
     <div id="map-container">
         <div id="map" style="width: 100%; height: 680px; position: relative;">
             <script src="javascript/main.js"></script>
         </div>
-
-        <div id="toolBox" class="toolBox bg-light p-3" style="position: absolute; top: 20px; left: 20px; z-index: 1000; width: 300px; box-shadow: 0px 4px 8px rgba(0,0,0,0.1);">
-            <h5 class="mb-3">Reittivalinnat</h5>
-            <div class="mb-2">
-                <label for="startPoint">Lähtöpiste:</label>
-                <input type="text" id="startPoint" class="form-control" placeholder="Anna lähtöpiste">
+        <div class="haku">
+            <div id="toolBox" class="toolBox bg-light p-3">
+                <h5 class="mb-3">Reittivalinnat</h5>
+                <div class="mb-2">
+                    <label for="startPoint">Lähtöpiste:</label>
+                    <input type="text" id="startPoint" class="form-control" placeholder="Anna lähtöpiste">
+                    <ul id="suggestionsList" class="list-group mt-1"></ul>
+                </div>
+                
+                <div class="mb-2">
+                    <label for="endPoint">Määränpää:</label>
+                    <input type="text" id="endPoint" class="form-control" placeholder="Anna määränpää">
+                    <ul id="suggestionsList" class="list-group mt-1"></ul>
+                </div>
+                <div class="d-grid gap-2">
+                    <button id="findRoute" class="btn btn-primary">Etsi reitti</button>
+                    <div id="routeDistance" class="mt-2" style="display: none;">Matka: ? km</div>
+                </div>
+                <input type="hidden" id="startPointCoords">     <!-- Piilotetut tekstikentät, joihin koordinaatit tallentuvat asteina -->
+                <input type="hidden" id="endPointCoords">
             </div>
-            <div class="mb-2">
-                <label for="endPoint">Määränpää:</label>
-                <input type="text" id="endPoint" class="form-control" placeholder="Anna määränpää">
-            </div>
-            <div class="d-grid gap-2">
-                <button id="findRoute" class="btn btn-primary">Etsi reitti</button>
-            </div>
-            <input type="hidden" id="startPointCoords">     <!-- Piilotetut tekstikentät, joihin koordinaatit tallentuvat asteina -->
-            <input type="hidden" id="endPointCoords">
         </div>
     </div>
-    
+
+    <script src="javascript/addresses.js"></script>
 </body>
 </html>

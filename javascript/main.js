@@ -169,6 +169,14 @@ function getRoute(startLat, startLng, endLat, endLng) {     // Reitinhakufunktio
 
                 currentRouteLayer = L.geoJSON(geojsonData).addTo(map);      // Asetetaan reittikerros kartalle
 
+                // tähän reitin pituus?
+                const distance = (route.distance / 1000).toFixed(2);
+                const routeDistanceDiv = document.getElementById('routeDistance');
+                routeDistanceDiv.textContent = `Matka: ${distance} km`;
+                routeDistanceDiv.style.display = 'block';
+                routeDistanceDiv.style.textAlign = 'center';
+
+
                 if (geojsonData.coordinates.length > 0) {
                     map.fitBounds(currentRouteLayer.getBounds());
                 }

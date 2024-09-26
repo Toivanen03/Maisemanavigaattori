@@ -1,6 +1,9 @@
 .toolBox {
+    position: absolute;
+    bottom:20px;
+    left:20px ;
     width: 300px;
-    background-color: #f9f9f9;
+    background-color: #f9f9f9b1;
     padding: 15px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -20,9 +23,72 @@
 
 #map-container {
     position: relative;
+   
 }
 
 
 #map {
     cursor: default;
+    height: 100vh;
+}
+
+.settings{
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1002;
+}
+
+.settings img {
+    width: 30px;
+    transition: transform 0.5s ease;
+}
+
+.settings img:hover {
+    transform: rotate(360deg);
+}
+
+#settings-panel {
+    position: absolute;
+    top: -100%;
+    left: 0;
+    height: auto;
+    width: 100%;
+    background-color:rgba(0, 0, 0, 0.79);
+    border: 1px solid #0a0a0a;
+    color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.39);
+    transition: top 0.5s ease;
+    z-index: 1001;
+    text-align: center;
+    padding-top: 20px;
+}
+
+
+#settings-panel.show {
+    top: 0;
+}
+
+
+
+@media (max-width: 800px) {
+  
+    #map{
+        cursor: default;
+        height: 100vh;
+    }
+
+    .toolBox {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 95%;
+        max-width: 400px;
+      
+    }
+    
+
+ 
+    
 }
