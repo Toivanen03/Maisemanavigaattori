@@ -3,7 +3,7 @@
 
 const startPointInput = document.getElementById('startPoint');
 const endPointInput = document.getElementById('endPoint');
-const startSuggestionsList = document.getElementById('suggestionsList');
+const startSuggestionsList = document.getElementById('startSuggestionsList');
 const endSuggestionsList = document.getElementById('endSuggestionsList');
 
 // haetaan herestä osoitteet (tässä vielä hiomista jotta saadaan vain suomen osoitteet)

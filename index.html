@@ -23,14 +23,6 @@
         <p>Setting 2</p>
     </div>
 
-    <div class="settings">
-        <img id="settings-icon" src="images/settings.png" alt="settings">
-    </div>
-    <div id="settings-panel" class="settings-panel">
-        <p>Setting 1</p>
-        <p>Setting 2</p>
-    </div>
-
     <div id="map-container">
         <div id="map">
             <script src="javascript/main.js"></script>
@@ -41,13 +33,13 @@
                 <div class="mb-2">
                     <label for="startPoint">Lähtöpiste:</label>
                     <input type="text" id="startPoint" class="form-control" placeholder="Anna lähtöpiste">
-                    <ul id="suggestionsList" class="list-group mt-1"></ul>
+                    <ul id="startSuggestionsList" class="list-group mt-1"></ul>
                 </div>
                 
                 <div class="mb-2">
                     <label for="endPoint">Määränpää:</label>
                     <input type="text" id="endPoint" class="form-control" placeholder="Anna määränpää">
-                    <ul id="suggestionsList" class="list-group mt-1"></ul>
+                    <ul id="endSuggestionsList" class="list-group mt-1"></ul>
                 </div>
                 <div class="d-grid gap-2">
                     <button id="findRoute" class="btn btn-primary">Etsi reitti</button>
@@ -61,6 +53,5 @@
 
     <script src="javascript/addresses.js"></script>
 
-    <script src="javascript/addresses.js"></script>
 </body>
 </html>
