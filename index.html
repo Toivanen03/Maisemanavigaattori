@@ -27,6 +27,29 @@
         <div id="map">
             <script type="module" src="javascript/main.js"></script>
         </div>
+
+        <div class="locationQueryBox" id="locationQueryBox">
+            <div class="locationQueryBox-text">
+                <p>Maisemanavigaattorin reittiopastustoiminto tarvitsee luvan sijainnin käyttöön.
+                Ilman sijaintitietoa vain reittihaku on käytössä.</p>
+                <p><b>Haluatko antaa luvan sijainnin käyttöön?</b></p>
+            </div>
+            <div class="locationQueryBox-buttons">
+                <button class="btn btn-outline-dark m-1" onclick="handlePermission(true)">Kyllä</button>
+                <button class="btn btn-outline-dark m-1" onclick="handlePermission(false)">Ei</button>
+            </div>
+        </div>
+
+        <div class="permissionDeniedBox" id="permissionDeniedBox">
+            <div class="permissionDeniedBox-text">
+                <p>Maisemanavigaattorin reittiopastustoiminto tarvitsee luvan sijainnin käyttöön.
+                Olet aiemmin kieltänyt sijainnin jakamisen.</p>
+                <p><b>Sijaintiluvat tulee nollata selaimen asetuksista.</b></p>
+                <a href="https://support.google.com/chrome/answer/142065?hl=fi&co=GENIE.Platform%3DDesktop&oco=0" target="_blank">Ohjeet asetusten nollaamiseen Chromessa</a>
+                <button onclick="history.back()" class="btn btn-outline-dark m-5"><b>Palaa edelliselle sivulle</b></button>
+            </div>
+        </div>
+    
         <div class="haku">
             <div id="toolBox" class="toolBox bg-light p-3">
                 <h5 class="mb-3">Reittivalinnat</h5>

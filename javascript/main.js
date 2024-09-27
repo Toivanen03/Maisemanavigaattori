@@ -12,6 +12,19 @@ let geocodedDestinationAddress;
 const defaultLat = 61.23345;                                                // Oletussijainti (ABC Heinola). Käytetään, mikäli selaimelle ei ole annettu lupaa sijainnin jakamiseen
 const defaultLng = 26.04378;
 
+window.onload = function() {                                                // Tuodaan näkyviin lupakysely sijaintitiedon jakamiseen
+    navigator.permissions.query({ name: 'geolocation' })
+        .then(function(permissionStatus) {
+            if (permissionStatus.state === 'granted') {
+                handlePermission(true);
+            } else if (permissionStatus.state === 'denied') {
+                handlePermissionDenied();
+            } else {
+                document.getElementById('locationQueryBox').style.display = 'block';
+            }
+        });
+}
+    
 
 document.addEventListener('DOMContentLoaded', async function() {            // Haetaan Overpass Turbolla luotu JSON-data sallituista teistä (pienet tiet ja kadut Heinolan keskustan alueella, suodatus ei vielä toiminnassa)
     try {
@@ -22,28 +35,6 @@ document.addEventListener('DOMContentLoaded', async function() {            // H
         catch (err) {
             console.error('Virhe ladattaessa JSON-tiedostoa:', err);
         }
-
-    navigator.geolocation.getCurrentPosition(                               // Pyydetään selaimelta sijaintitieto, edellyttää käyttäjän myöntämää lupaa
-        function(position) {
-            let userLat = position.coords.latitude;
-            let userLng = position.coords.longitude;
-            drawMap(userLat, userLng, 20);
-            const latLngString = `${userLat.toFixed(5)}, ${userLng.toFixed(5)}`;
-            document.getElementById('startPointCoords').value = latLngString;
-            reverseGeocode(userLat, userLng, function(address) {            // Saatu sijainti geokoodataan käänteisesti ja asetetaan osoite tekstinsyöttökenttään ja markeriin
-                document.getElementById('startPoint').value = address;
-                startMarker = L.marker([userLat, userLng]).addTo(map).bindPopup(`<div style="text-align: center;"><b>Sijaintisi:</b></div><br>${address}`).openPopup();
-            });     
-        },
-        function(error) {                                                   // Jos sijaintia ei saada, siitä kerrotaan käyttäjälle ja asetetaan ylempänä määritetty oletussijainti
-            drawMap(defaultLat, defaultLng, 15);
-            document.getElementById('startPointCoords').value = `${defaultLat}, ${defaultLng}`;
-            reverseGeocode(defaultLat, defaultLng, function(address) {
-                document.getElementById('startPoint').value = "Oletussijainti";
-                startMarker = L.marker([defaultLat, defaultLng]).addTo(map).bindPopup(`${address}<br><div style="text-align: center;"><i>(Sijaintia ei saatu: ${error})</i></div>`).openPopup();
-            });
-        }
-    );
 
     document.getElementById('startPoint').addEventListener('blur', function() {     // Tapahtumakuuntelija tarkistaa lähtöpaikan syöttökentästä poistumisen
         const startAddress = document.getElementById('startPoint').value;           // Syötetyn osoitteen arvo luetaan kentästä,
@@ -106,6 +97,57 @@ document.addEventListener('DOMContentLoaded', async function() {            // H
 
 
 
+function handlePermission(reply) {                              // Funktiota kutsutaan HTML-koodin sijaintilupakyselypainikkeilla
+    document.getElementById('locationQueryBox').style.display = 'none';
+    if (reply === true) {                                       // Painikkeilta välittyy true tai false
+        navigator.geolocation.getCurrentPosition(               // Pyydetään selaimelta sijaintitieto, edellyttää käyttäjän myöntämää lupaa
+            function(position) {
+                let userLat = position.coords.latitude;
+                let userLng = position.coords.longitude;
+                drawMap(userLat, userLng, 20);
+                const latLngString = `${userLat.toFixed(5)}, ${userLng.toFixed(5)}`;
+                document.getElementById('startPointCoords').value = latLngString;
+                reverseGeocode(userLat, userLng, function(address) {            // Saatu sijainti geokoodataan käänteisesti ja asetetaan osoite tekstinsyöttökenttään ja markeriin
+                    document.getElementById('startPoint').value = address;
+                    startMarker = L.marker([userLat, userLng]).addTo(map).bindPopup(`<div style="text-align: center;"><b>Sijaintisi:</b></div><br>${address}`).openPopup();
+                });
+            },
+            function(error) {                       // Jos sijaintia ei saada, siitä kerrotaan käyttäjälle, asetetaan oletussijainti ja tulostetaan virhe
+                locationError(error);
+            });
+        } else {                                    // Jos sijaintilupaa ei myönnetä, siitä kerrotaan käyttäjälle ja asetetaan oletussijainti
+            locationError(null);
+            }
+}
+
+
+
+
+function handlePermissionDenied() {
+    document.getElementById('permissionDeniedBox').style.display = 'block';
+}
+
+
+
+
+function locationError(error) {                 // Funktio määrittelee viestin saamansa parametrin perusteella. Jos todellinen virhe sijaintihaussa tapahtuu,
+    let errorMessage;                           // näytetään eri viesti kuin tilanteessa, jossa käyttäjä on estänyt sijainnin jakamisen. Oletusosoitteen haku
+    drawMap(defaultLat, defaultLng, 15);        // ja markerin asettaminen tapahtuvat tässä funktiossa.
+    document.getElementById('startPointCoords').value = `${defaultLat}, ${defaultLng}`;
+    reverseGeocode(defaultLat, defaultLng, function(address) {
+        document.getElementById('startPoint').value = "Oletussijainti";
+        if (error != null) {
+            errorMessage = `${address}<br><div style="text-align: center;"><i>(Virhe sijainnin hakemisessa: ${error})</i></div>`;
+        } else {
+            errorMessage = `${address}<br><div style="text-align: center;"><i>(Sijaintilupaa ei myönnetty.)</i></div>`;
+        }
+        startMarker = L.marker([defaultLat, defaultLng]).addTo(map).bindPopup(errorMessage).openPopup();
+    })
+}
+   
+
+
+
 function placeAddressOnPopups() {                                           // Funktio avaa osoitteen markerin popup-ikkunaan
     if (currentMarkerType === 'start') {
         startMarker.bindPopup(geocodedStartAddress).openPopup();
@@ -118,7 +160,7 @@ function placeAddressOnPopups() {                                           // F
 
 
 
-function drawMap(lat, lng, zoomLevel) {
+function drawMap(lat, lng, zoomLevel) {    
     document.getElementById('map').style.cursor = 'crosshair';
     if (map) {                                                              // Jos sivulla on jo kartta, estetään päällekkäisyys poistamalla vanha kartta ennen uuden piirtoa
         map.remove();
@@ -278,3 +320,6 @@ function reverseGeocode(lat, lng, callback) {
             callback(null);                                         // Haku epäonnistui
         });
 }
+
+window.handlePermission = handlePermission;                         // Muunnetaan funktio globaaliksi. Koska scriptin type on module (tämä siksi, että import toimisi),
+                                                                    // sijaintilupapainikkeilla ei voida kutsua scriptin funktioita ilman muunnosta.

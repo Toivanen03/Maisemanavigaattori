@@ -92,3 +92,43 @@
  
     
 }
+
+
+
+
+.locationQueryBox {
+    position: fixed;
+    top: 15%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+    width: 40%;
+    height: 25%;
+    background-color: white;
+    border: solid 5px darkgray;
+    border-radius: 20px;
+    padding: 10px;
+    text-align: center;
+    z-index: 9999;
+}
+
+.locationQueryBox .btn {
+    width: 60px;
+    font-weight: 600;
+}
+
+.permissionDeniedBox {
+    position: fixed;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+    width: 40%;
+    height: auto;
+    background-color: white;
+    border: solid 5px darkgray;
+    border-radius: 20px;
+    padding: 10px;
+    text-align: center;
+    z-index: 99999;
+}
