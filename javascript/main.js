@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async function() {            // H
             reverseGeocode(userLat, userLng, function(address) {            // Saatu sijainti geokoodataan käänteisesti ja asetetaan osoite tekstinsyöttökenttään ja markeriin
                 document.getElementById('startPoint').value = address;
                 startMarker = L.marker([userLat, userLng]).addTo(map).bindPopup(`<div style="text-align: center;"><b>Sijaintisi:</b></div><br>${address}`).openPopup();
-            });
+            });     
         },
         function(error) {                                                   // Jos sijaintia ei saada, siitä kerrotaan käyttäjälle ja asetetaan ylempänä määritetty oletussijainti
             drawMap(defaultLat, defaultLng, 15);
@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', async function() {            // H
                     } else {
                         startMarker = L.marker([startLat, startLng]).addTo(map);
                     }
+                    document.getElementById('startPoint').value = geocodedStartAddress;
                 });
             }
         });
@@ -73,6 +74,7 @@ document.addEventListener('DOMContentLoaded', async function() {            // H
                     } else {
                         endMarker = L.marker([endLat, endLng]).addTo(map);
                     }
+                    document.getElementById('endPoint').value = geocodedDestinationAddress;
                 });
             }
         });
@@ -100,6 +102,18 @@ document.addEventListener('DOMContentLoaded', async function() {            // H
         }
     });
 });
+
+
+
+
+function placeAddressOnPopups() {
+    if (currentMarkerType === 'start') {
+        startMarker.bindPopup(geocodedStartAddress).openPopup();
+    }
+    if (currentMarkerType === 'end') {
+        endMarker.bindPopup(geocodedDestinationAddress).openPopup();
+    }
+}
 
 
 
@@ -134,14 +148,14 @@ function drawMap(lat, lng, zoomLevel) {
                     displayAddress = isNaN(streetAndNumber[1]) ?                    // Mikäli numeroa ei ole,
                         streetAndNumber[0] + ", " + addressParts[1] :               // displayAddress-muuttujaan tallennetaan kadunnimi ja kaupunki.
                         streetAndNumber[0] + " " + streetAndNumber[1] + ", " + addressParts[1]; // Jos numero löytyy, displayAddress saa arvon "kadunnimi numero, kaupunki"
-                }
+                    }
                 if (currentMarkerType === 'start') {        // Lohkossa luodaan valitun tekstikentän perusteella merkki, asetetaan se kartalle ja näytetään osoite popup-ikkunassa
                     if (startMarker) {
                         startMarker.setLatLng(e.latlng).update();
                     }
                     document.getElementById('startPointCoords').value = latLngString;       // Asetetaan merkin koordinaatit piilotettuun syöttökenttään
                     document.getElementById('startPoint').value = address || latLngString;
-
+                    geocodedStartAddress = address;
                 } else if (currentMarkerType === 'end') {
                     if (endMarker) {
                         endMarker.setLatLng(e.latlng).update();
@@ -150,7 +164,9 @@ function drawMap(lat, lng, zoomLevel) {
                     }
                     document.getElementById('endPointCoords').value = latLngString;
                     document.getElementById('endPoint').value = address || latLngString;
+                    geocodedDestinationAddress = address
                 }
+                placeAddressOnPopups();
             });
         }
     });
@@ -171,6 +187,7 @@ function processMapData(data) {                         // Rakenteilla, käytet�
 
 
 function getRoute(startLat, startLng, endLat, endLng) {     // Reitinhakufunktio lähettää hakupyynnön ORS-palvelimelle. Osoitteen muuttujissa on haettavat koordinaatit sekä APIkey. Lisäparametrilla määritetään haettavaksi kolme reittivaihtoehtoa.
+    currentMarkerType = 'end';
     const url = `https://api.openrouteservice.org/v2/directions/driving-car?start=${startLng},${startLat}&end=${endLng},${endLat}&api_key=${apiKey}`;    
     fetch(url)                                              // Haetaan pyydetty data
         .then(response => response.json())
@@ -199,7 +216,8 @@ function getRoute(startLat, startLng, endLat, endLng) {     // Reitinhakufunktio
                 }                
             }
         })
-        .catch(err => console.error('Virhe:', err));                                        // Tulostetaan virhe konsoliin, mikäli reittiä ei löydy   
+        .catch(err => console.error('Virhe:', err));                                        // Tulostetaan virhe konsoliin, mikäli reittiä ei löydy
+        placeAddressOnPopups();
 }
 
 
