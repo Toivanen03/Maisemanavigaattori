@@ -132,3 +132,7 @@
     text-align: center;
     z-index: 99999;
 }
+
+.permissionDeniedBox .btn {
+    font-weight: 600;
+}

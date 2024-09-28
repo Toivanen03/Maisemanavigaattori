@@ -15,10 +15,10 @@ const defaultLng = 26.04378;
 window.onload = function() {                                                // Tuodaan näkyviin lupakysely sijaintitiedon jakamiseen
     navigator.permissions.query({ name: 'geolocation' })
         .then(function(permissionStatus) {
-            if (permissionStatus.state === 'granted') {
+            if (permissionStatus.state === 'granted') {                     // Tarkistetaan, onko lupa annettu aiemmalla käynnillä
                 handlePermission(true);
             } else if (permissionStatus.state === 'denied') {
-                handlePermissionDenied();
+                handlePermissionDenied(null);
             } else {
                 document.getElementById('locationQueryBox').style.display = 'block';
             }
@@ -73,8 +73,11 @@ document.addEventListener('DOMContentLoaded', async function() {            // H
 
     document.getElementById('findRoute').addEventListener('click', function() {     // Tapahtumakuuntelija käsittelee reittihakupainikkeen
         let start = document.getElementById('startPoint').value;
-        let endAddress = document.getElementById('endPoint').value; 
+        let endAddress = document.getElementById('endPoint').value;
         if (start && endAddress) {                                                  // Kun osoitteet on saatu, geokoodataan osoitteet koordinaateiksi
+            if (start === 'Oletussijainti') {                                       // Varmistetaan, että sijaintitiedon puuttuessa saadaan lähtöpaikalle koordinaatit sivun auetessa
+                start = geocodedStartAddress;
+            }
             geocodeAddress(start, function(startLat, startLng) {
                 if (startLat && startLng) {
                     geocodeAddress(endAddress, function(endLat, endLng) {
@@ -116,6 +119,7 @@ function handlePermission(reply) {                              // Funktiota kut
                 locationError(error);
             });
         } else {                                    // Jos sijaintilupaa ei myönnetä, siitä kerrotaan käyttäjälle ja asetetaan oletussijainti
+            handlePermissionDenied(null);
             locationError(null);
             }
 }
@@ -123,8 +127,11 @@ function handlePermission(reply) {                              // Funktiota kut
 
 
 
-function handlePermissionDenied() {
+function handlePermissionDenied(parameter) {        // Huolehtii viestilaatikon näytöstä tilanteessa, jossa käyttäjä on estänyt sijainnin
     document.getElementById('permissionDeniedBox').style.display = 'block';
+    if (parameter === 'close') {
+        document.getElementById('permissionDeniedBox').style.display = 'none';
+    }
 }
 
 
@@ -141,6 +148,7 @@ function locationError(error) {                 // Funktio määrittelee viestin
         } else {
             errorMessage = `${address}<br><div style="text-align: center;"><i>(Sijaintilupaa ei myönnetty.)</i></div>`;
         }
+        geocodedStartAddress = address;         // Tallennetaan osoite globaaliin muuttujaan
         startMarker = L.marker([defaultLat, defaultLng]).addTo(map).bindPopup(errorMessage).openPopup();
     })
 }
@@ -321,5 +329,5 @@ function reverseGeocode(lat, lng, callback) {
         });
 }
 
-window.handlePermission = handlePermission;                         // Muunnetaan funktio globaaliksi. Koska scriptin type on module (tämä siksi, että import toimisi),
-                                                                    // sijaintilupapainikkeilla ei voida kutsua scriptin funktioita ilman muunnosta.
+window.handlePermission = handlePermission;                         // Muunnetaan funktiot globaaleiksi. Koska scriptin type on module (tämä siksi, että import toimisi),
+window.handlePermissionDenied = handlePermissionDenied;             // scriptin funktioita ei voida kutsua ilman muunnosta.
