@@ -26,8 +26,21 @@ window.onload = function() {                                                // T
 }
     
 
-document.addEventListener('DOMContentLoaded', async function() {            // Haetaan Overpass Turbolla luotu JSON-data sallituista teistä (pienet tiet ja kadut Heinolan keskustan alueella, suodatus ei vielä toiminnassa)
-    try {
+document.addEventListener('DOMContentLoaded', async function() {            
+    if (!localStorage.getItem('cookiesAccepted')) {                         // Tarkistetaan, onko HEREn evästekäytäntö hyväksytty aiemmin
+        document.getElementById('cookie-banner').style.display = 'block';
+    }
+
+    document.getElementById('accept-cookies').addEventListener('click', function() {
+        localStorage.setItem('cookiesAccepted', 'true');
+        document.getElementById('cookie-banner').style.display = 'none';
+    });
+
+    document.getElementById('decline-cookies').addEventListener('click', function() {
+        window.location.href = "https://www.google.fi";
+    });
+
+    try { // Haetaan Overpass Turbolla luotu JSON-data sallituista teistä (pienet tiet ja kadut Heinolan keskustan alueella, suodatus ei vielä toiminnassa)
         const response = await fetch('mapdata/heinola.json');
         const data = await response.json();
         filteredWays = processMapData(data);

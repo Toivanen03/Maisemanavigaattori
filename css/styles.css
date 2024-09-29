@@ -96,7 +96,7 @@
 
 
 
-.locationQueryBox {
+.locationQueryBox {                         /* Sijaintilupalaatikko */
     position: fixed;
     top: 15%;
     left: 50%;
@@ -135,4 +135,44 @@
 
 .permissionDeniedBox .btn {
     font-weight: 600;
+}
+
+.cookie-banner {                        /* Evästeilmoitus*/
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #2C2C2C;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.3);
+    z-index: 99999;
+    font-family: Arial, sans-serif;
+    display: none;
+}
+
+.cookie-banner p {
+    margin: 0;
+    display: inline-block;
+    font-size: 16px;
+}
+
+.cookie-banner a {
+    color: #23b6ff;
+    text-decoration: underline;
+}
+
+.cookie-banner button {
+    background-color: #2391ff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-left: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.cookie-banner button:hover {
+    background-color: #ff8500;
 }
