@@ -17,6 +17,7 @@ window.onload = function() {                                                // T
         .then(function(permissionStatus) {
             if (permissionStatus.state === 'granted') {                     // Tarkistetaan, onko lupa annettu aiemmalla käynnillä
                 handlePermission(true);
+                document.getElementById('locationQueryBox').style.display = 'none';
             } else if (permissionStatus.state === 'denied') {
                 handlePermissionDenied(null);
             } else {
