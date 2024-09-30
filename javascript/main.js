@@ -1,4 +1,5 @@
-import {apiKey, apiKeyHERE} from './config.js';                             // Ladataan API-avaimet
+import { apiKey, apiKeyHERE } from './config.js';                           // Ladataan API-avaimet
+import { processMapData } from './routeFilter.js';                          // Tuodaan suodatustoiminnot
 
 let map;                                                                    // Alustetaan muuttujat:    - Karttapohja
 let currentRouteLayer = null;                                               //                          - Reittikerros
@@ -166,86 +167,6 @@ function locationError(error) {                 // Funktio määrittelee viestin
         startMarker = L.marker([defaultLat, defaultLng]).addTo(map).bindPopup(errorMessage).openPopup();
     })
 }
-   
-
-
-
-function placeAddressOnPopups() {                                           // Funktio avaa osoitteen markerin popup-ikkunaan
-    if (currentMarkerType === 'start') {
-        startMarker.bindPopup(geocodedStartAddress).openPopup();
-    }
-    if (currentMarkerType === 'end') {
-        endMarker.bindPopup(geocodedDestinationAddress).openPopup();
-    }
-}
-
-
-
-
-function drawMap(lat, lng, zoomLevel) {    
-    document.getElementById('map').style.cursor = 'crosshair';
-    if (map) {                                                              // Jos sivulla on jo kartta, estetään päällekkäisyys poistamalla vanha kartta ennen uuden piirtoa
-        map.remove();
-    }
-
-    map = L.map('map').setView([lat, lng], zoomLevel);                      // Luodaan karttapohja
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {     // Asetetaan karttakuvat karttapohjalle
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-    document.getElementById('startPoint').addEventListener('focus', () => { // Tapahtumakuuntelut, joilla määritetään syöttökentän perusteella, kumpaa pistettä ollaan asettamassa
-        currentMarkerType = 'start';
-    });
-
-    document.getElementById('endPoint').addEventListener('focus', () => {
-        currentMarkerType = 'end';
-    });
-
-    map.on('click', function(e) {                                                   // Tarkistetaan klikkaustapahtumat kartan päällä
-        if (currentMarkerType) {                                                    // currentMarkerType on arvoltaan joko "start" tai "end" klikatun osoitekentän mukaisesti
-            const latLngString = e.latlng.lat.toFixed(5) + ', ' + e.latlng.lng.toFixed(5);      // Tallennetaan muuttujaan kartalta koordinaatit ja pyöristetään
-            reverseGeocode(e.latlng.lat, e.latlng.lng, function(address) {          // Muunnetaan koordinaatit osoitteeksi
-                if (address) {
-                    let addressParts = address.split(", ");                         // Pilkotaan osoite paloiksi. Tämä helpottaa osoitteen muotoilua eri tarkoituksiin
-                    let streetAndNumber = addressParts[0].split(" ");               // Katu ja numero. Numero saattaa puuttua eli olla undefined
-                    displayAddress = isNaN(streetAndNumber[1]) ?                    // Mikäli numeroa ei ole,
-                        streetAndNumber[0] + ", " + addressParts[1] :               // displayAddress-muuttujaan tallennetaan kadunnimi ja kaupunki.
-                        streetAndNumber[0] + " " + streetAndNumber[1] + ", " + addressParts[1]; // Jos numero löytyy, displayAddress saa arvon "kadunnimi numero, kaupunki"
-                    }
-                if (currentMarkerType === 'start') {        // Lohkossa päivitetään aloitusmerkin sijainti. Ensimmäinen asettaminen tapahtuu, kun sivu ladataan.
-                    if (startMarker) {
-                        startMarker.setLatLng(e.latlng).update();
-                    }
-                    document.getElementById('startPointCoords').value = latLngString;       // Asetetaan merkin koordinaatit piilotettuun syöttökenttään
-                    document.getElementById('startPoint').value = address || latLngString;
-                    geocodedStartAddress = address;                                 // Päivitetään osoitemuuttuja
-                } else if (currentMarkerType === 'end') {                           // Loppumerkin lohko muuten sama kuin yllä, mutta sisältää myös
-                    if (endMarker) {                                                // merkin asettamisen ensimmäisen kerran.
-                        endMarker.setLatLng(e.latlng).update();
-                    } else {
-                        endMarker = L.marker(e.latlng).addTo(map);
-                    }
-                    document.getElementById('endPointCoords').value = latLngString;
-                    document.getElementById('endPoint').value = address || latLngString;
-                    geocodedDestinationAddress = address
-                }
-                placeAddressOnPopups();                                             // Päivitetään osoite kuplassa
-            });
-        }
-    });
-}
-
-
-
-
-function processMapData(data) {                         // Rakenteilla, käytetään reittien suodatukseen 
-    return data.elements.filter(element => {
-        return element.type === 'way' &&
-            element.tags.highway &&
-            !['motorway', 'motorway_link', 'trunk', 'trunk_link'].includes(element.tags.highway);
-    });
-}
 
 
 
@@ -342,6 +263,78 @@ function reverseGeocode(lat, lng, callback) {
             callback(null);                                         // Haku epäonnistui
         });
 }
+
+
+
+
+function drawMap(lat, lng, zoomLevel) {    
+    document.getElementById('map').style.cursor = 'crosshair';
+    if (map) {                                                              // Jos sivulla on jo kartta, estetään päällekkäisyys poistamalla vanha kartta ennen uuden piirtoa
+        map.remove();
+    }
+
+    map = L.map('map').setView([lat, lng], zoomLevel);                      // Luodaan karttapohja
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {     // Asetetaan karttakuvat karttapohjalle
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    document.getElementById('startPoint').addEventListener('focus', () => { // Tapahtumakuuntelut, joilla määritetään syöttökentän perusteella, kumpaa pistettä ollaan asettamassa
+        currentMarkerType = 'start';
+    });
+
+    document.getElementById('endPoint').addEventListener('focus', () => {
+        currentMarkerType = 'end';
+    });
+
+    map.on('click', function(e) {                                                   // Tarkistetaan klikkaustapahtumat kartan päällä
+        if (currentMarkerType) {                                                    // currentMarkerType on arvoltaan joko "start" tai "end" klikatun osoitekentän mukaisesti
+            const latLngString = e.latlng.lat.toFixed(5) + ', ' + e.latlng.lng.toFixed(5);      // Tallennetaan muuttujaan kartalta koordinaatit ja pyöristetään
+            reverseGeocode(e.latlng.lat, e.latlng.lng, function(address) {          // Muunnetaan koordinaatit osoitteeksi
+                if (address) {
+                    let addressParts = address.split(", ");                         // Pilkotaan osoite paloiksi. Tämä helpottaa osoitteen muotoilua eri tarkoituksiin
+                    let streetAndNumber = addressParts[0].split(" ");               // Katu ja numero. Numero saattaa puuttua eli olla undefined
+                    displayAddress = isNaN(streetAndNumber[1]) ?                    // Mikäli numeroa ei ole,
+                        streetAndNumber[0] + ", " + addressParts[1] :               // displayAddress-muuttujaan tallennetaan kadunnimi ja kaupunki.
+                        streetAndNumber[0] + " " + streetAndNumber[1] + ", " + addressParts[1]; // Jos numero löytyy, displayAddress saa arvon "kadunnimi numero, kaupunki"
+                    }
+                if (currentMarkerType === 'start') {        // Lohkossa päivitetään aloitusmerkin sijainti. Ensimmäinen asettaminen tapahtuu, kun sivu ladataan.
+                    if (startMarker) {
+                        startMarker.setLatLng(e.latlng).update();
+                    }
+                    document.getElementById('startPointCoords').value = latLngString;       // Asetetaan merkin koordinaatit piilotettuun syöttökenttään
+                    document.getElementById('startPoint').value = address || latLngString;
+                    geocodedStartAddress = address;                                 // Päivitetään osoitemuuttuja
+                } else if (currentMarkerType === 'end') {                           // Loppumerkin lohko muuten sama kuin yllä, mutta sisältää myös
+                    if (endMarker) {                                                // merkin asettamisen ensimmäisen kerran.
+                        endMarker.setLatLng(e.latlng).update();
+                    } else {
+                        endMarker = L.marker(e.latlng).addTo(map);
+                    }
+                    document.getElementById('endPointCoords').value = latLngString;
+                    document.getElementById('endPoint').value = address || latLngString;
+                    geocodedDestinationAddress = address
+                }
+                placeAddressOnPopups();                                             // Päivitetään osoite kuplassa
+            });
+        }
+    });
+}
+   
+
+
+
+function placeAddressOnPopups() {                                           // Funktio avaa osoitteen markerin popup-ikkunaan
+    if (currentMarkerType === 'start') {
+        startMarker.bindPopup(geocodedStartAddress).openPopup();
+    }
+    if (currentMarkerType === 'end') {
+        endMarker.bindPopup(geocodedDestinationAddress).openPopup();
+    }
+}
+
+
+
 
 window.handlePermission = handlePermission;                         // Muunnetaan funktiot globaaleiksi. Koska scriptin type on module (tämä siksi, että import toimisi),
 window.handlePermissionDenied = handlePermissionDenied;             // scriptin funktioita ei voida kutsua ilman muunnosta.
