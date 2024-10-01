@@ -7,9 +7,9 @@ const endPointInput = document.getElementById('endPoint');
 const startSuggestionsList = document.getElementById('startSuggestionsList');
 const endSuggestionsList = document.getElementById('endSuggestionsList');
 
-// haetaan herestä osoitteet (tässä vielä hiomista jotta saadaan vain suomen osoitteet)
+// haetaan herestä osoitteet
 function fetchSuggestions(query, suggestionsList) {
-    const url = `https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(query)}&apiKey=${apiKeyHERE}`;
+    const url = `https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(query)}&in=countryCode:FIN&apiKey=${apiKeyHERE}`;
 
     fetch(url)
         .then(response => response.json())

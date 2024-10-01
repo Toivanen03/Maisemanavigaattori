@@ -5,7 +5,7 @@
     left:20px ;
     position: absolute;
     bottom:20px;
-    left:20px ;
+    left:20px;
     width: 300px;
     background-color: #f9f9f9b1;
     padding: 15px;
@@ -34,7 +34,7 @@
 
 .settings{
     position: absolute;
-    top: 20px;
+    top: 13px;
     right: 20px;
     z-index: 1002;
 }
@@ -46,51 +46,33 @@
 
 .settings img:hover {
     transform: rotate(360deg);
+    cursor: pointer;
 }
 
 #settings-panel {
     position: absolute;
     top: -100%;
-    left: 0;
     height: auto;
     width: 100%;
-    background-color:rgba(0, 0, 0, 0.79);
+    background-color:rgba(0, 0, 0, 0.865);
     border: 1px solid #0a0a0a;
     color: white;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.39);
     transition: top 0.5s ease;
     z-index: 1001;
-    text-align: center;
-    padding-top: 20px;
+    padding: 10px 10px 0px 20px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+#settings-panel p:hover {
+    color: #555;
+    cursor: pointer;
 }
 
 
 #settings-panel.show {
     top: 0;
-}
-
-
-
-@media (max-width: 800px) {
-  
-    #map{
-        cursor: default;
-        height: 100vh;
-    }
-
-    .toolBox {
-        position: absolute;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 95%;
-        max-width: 400px;
-      
-    }
-    
-
- 
-    
 }
 
 
@@ -175,4 +157,30 @@
 
 .cookie-banner button:hover {
     background-color: #ff8500;
+}
+
+
+@media (max-width: 800px) {
+  
+    #map{
+        cursor: default;
+        height: 100vh;
+    }
+
+    .toolBox {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 95%;
+        max-width: 400px;
+    }
+
+    #settings-panel {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+
+    
 }
