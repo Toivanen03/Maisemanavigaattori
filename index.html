@@ -14,20 +14,33 @@
 
 </head>
 <body>
-    <div class="top-menu">
+    <div class="side-menu">
         <div class="settings">
-            <img id="settings-icon" src="images/settings.png" alt="settings">
-        </div>
-        <div id="settings-panel" class="settings-panel">
-            <p>Info</p>
-            <p>Jotain?</p>
-            <p>Jotain?</p>
-            <p>Jotain?</p>
+            <img id="settings-icon" class="animate-image" src="images/settings.png" alt="settings-icon" >
+            <img id="findMyLocation" src="images/location.png" alt="current-location-icon" onclick="handlePermission(true)">
         </div>
     </div>
+        <div id="settings-panel" class="settings-panel">
+            <p>Info</p>
+            <div class="maisema-selection">
+                <p id="toggle-maisema" style="cursor: pointer;">Maisemareitti</p>
+                <div id="maisema-options" style="display: none;">
+                    <label>
+                        <input type="radio" name="maisema" value="kylla" checked> Kyllä
+                    </label>
+                    <label>
+                        <input type="radio" name="maisema" value="ei"> Ei
+                    </label>
+                </div>
+            </div>
+            <p id="fullscreen-toggle">Fullscreen</p>
+        </div>
+    
+    
 
     <div id="map-container">
         <div id="map">
+            
             <script type="module" src="javascript/main.js"></script>
         </div>
 
@@ -67,7 +80,7 @@
         
         <div class="haku">
             <div id="toolBox" class="toolBox bg-light p-3">
-                <h5 class="mb-3">Reittivalinnat</h5>
+                <h5 class="mb-3">Reittivalinnat</h5> <span id="removeRoutes">Tyhjennä</span>
                 <div class="mb-2">
                     <label for="startPoint">Lähtöpiste:</label>
                     <input type="text" id="startPoint" class="form-control" placeholder="Anna lähtöpiste">
@@ -81,6 +94,7 @@
                 </div>
                 <div class="d-grid gap-2">
                     <button id="findRoute" class="btn btn-primary">Etsi reitti</button>
+                    <button id="navigateRoute" class="btn btn-primary">Navigoi</button>
                     <div id="routeDistance" class="mt-2" style="display: none;">Matka: ? km</div>
                 </div>
                 <input type="hidden" id="startPointCoords">     <!-- Piilotetut tekstikentät, joihin koordinaatit tallentuvat asteina -->

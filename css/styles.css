@@ -32,21 +32,27 @@
     height: 100vh;
 }
 
+
 .settings{
     position: absolute;
     top: 13px;
     right: 20px;
     z-index: 1002;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .settings img {
     width: 30px;
     transition: transform 0.5s ease;
+    margin-bottom: 40px;
+    cursor: pointer;
 }
 
-.settings img:hover {
+.animate-image:hover{
     transform: rotate(360deg);
-    cursor: pointer;
+  
 }
 
 #settings-panel {
@@ -74,6 +80,23 @@
 #settings-panel.show {
     top: 0;
 }
+
+
+#removeRoutes{
+    position: absolute;
+    top: 20px;
+    right: 15px;
+    font-size: xx-small;
+}
+
+#removeRoutes:hover{
+    cursor: pointer;
+}
+
+.hide {
+    display: none;
+}
+
 
 
 

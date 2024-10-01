@@ -1,5 +1,5 @@
 // Pyykkönen
-// osoitteiden autom.ehdotus
+// Osoitteiden autom.ehdotus
 import {apiKeyHERE} from "../javascript/config.js";
 
 const startPointInput = document.getElementById('startPoint');
@@ -7,7 +7,7 @@ const endPointInput = document.getElementById('endPoint');
 const startSuggestionsList = document.getElementById('startSuggestionsList');
 const endSuggestionsList = document.getElementById('endSuggestionsList');
 
-// haetaan herestä osoitteet
+// Haetaan herestä osoitteet
 function fetchSuggestions(query, suggestionsList) {
     const url = `https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(query)}&in=countryCode:FIN&apiKey=${apiKeyHERE}`;
 
@@ -23,8 +23,8 @@ function fetchSuggestions(query, suggestionsList) {
 }
 
 
-// ehdotukset tulee näkyviin mikäli syötetään enemmän kuin 2 kirjainta
-// lähtöpiste
+// Ehdotukset tulee näkyviin mikäli syötetään enemmän kuin 2 kirjainta
+// Lähtöpiste
 startPointInput.addEventListener('input', function() {
     const query = startPointInput.value;
     if (query.length > 2) {
@@ -33,7 +33,7 @@ startPointInput.addEventListener('input', function() {
         startSuggestionsList.innerHTML = '';
     }
 });
-// määränpää
+// Määränpää
 endPointInput.addEventListener('input', function() {
     const query = endPointInput.value;
     if (query.length > 2) {
@@ -45,7 +45,7 @@ endPointInput.addEventListener('input', function() {
 
 
 
-// näytetään osoitteet listana allekkain, tässä myös valitaan klikattu osoite
+// Näytetään osoitteet listana allekkain, tässä myös valitaan klikattu osoite
 function displaySuggestions(suggestions, suggestionsList) {
     suggestionsList.innerHTML = '';
 
@@ -71,7 +71,7 @@ function displaySuggestions(suggestions, suggestionsList) {
     });
 }
 
-// klikkaamalla muualle osoite-ehdotus poistuu
+// Klikkaamalla muualle osoite-ehdotus poistuu
 document.addEventListener('click', function(event) {
     if (!startPointInput.contains(event.target) && !startSuggestionsList.contains(event.target)) {
         startSuggestionsList.innerHTML = '';
@@ -84,7 +84,7 @@ document.addEventListener('click', function(event) {
 
 
 
-// valikko mahdollisille asetuksille?
+// Valikko mahdollisille asetuksille?
 document.getElementById('settings-icon').addEventListener('click', function(event) {
     event.stopPropagation();
     const panel = document.getElementById('settings-panel');
@@ -99,3 +99,60 @@ document.addEventListener('click', function(event) {
         panel.classList.remove('show');
     }
 });
+
+
+
+// Tyhjätään osoitteet, esim uutta hakua varten (tähän vielä reitin tyhjäys kartalta)
+const startPointDiv = document.getElementById('startPoint').parentElement;
+const endPointDiv = document.getElementById('endPoint').parentElement;
+const findRouteButton = document.getElementById('findRoute');
+const routeDistance = document.getElementById("routeDistance");
+const deleteRoute = document.getElementById("removeRoutes");
+
+
+document.getElementById("removeRoutes").addEventListener("click", function() {
+    document.getElementById("startPoint").value = "";
+    document.getElementById("endPoint").value = "";
+    routeDistance.style.display = "none";
+});
+
+// Piilotetaan hakukentät kun aloitetaan navigointi 
+document.getElementById('navigateRoute').addEventListener('click', function() {
+    startPointDiv.classList.toggle('hide');
+    endPointDiv.classList.toggle('hide');
+    findRouteButton.classList.toggle('hide');
+    deleteRoute.classList.toggle('hide');
+});
+
+
+// Maisemareitille valinta
+document.getElementById('toggle-maisema').addEventListener('click', function() {
+    const maisemaOptions = document.getElementById('maisema-options');
+    if (maisemaOptions.style.display === 'none' || maisemaOptions.style.display === '') {
+        maisemaOptions.style.display = 'block';
+    } else {
+        maisemaOptions.style.display = 'none';
+    }
+});
+
+const radioButtons = document.querySelectorAll('input[name="maisema"]');
+radioButtons.forEach(function(radio) {
+    radio.addEventListener('change', function() {
+        const maisemaOptions = document.getElementById('maisema-options');
+        maisemaOptions.style.display = 'none';
+    });
+});
+
+
+// Fullscreen tila
+document.getElementById('fullscreen-toggle').addEventListener('click', function() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+    } else {
+        document.exitFullscreen();
+    }
+});
+
+
+
+
