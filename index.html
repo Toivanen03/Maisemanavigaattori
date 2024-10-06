@@ -24,13 +24,9 @@
             <p>Info</p>
             <div class="maisema-selection">
                 <p id="toggle-maisema" style="cursor: pointer;">Maisemareitti</p>
-                <div id="maisema-options" style="display: none;">
-                    <label>
-                        <input type="radio" name="maisema" value="kylla" checked> Kyllä
-                    </label>
-                    <label>
-                        <input type="radio" name="maisema" value="ei"> Ei
-                    </label>
+                <div id="maisema-options" class="hide">
+                    <input type="radio" name="maisema" value="kylla"> Käytössä<br>
+                    <input type="radio" name="maisema" value="ei"> Ei käytössä<br>
                 </div>
             </div>
             <p id="fullscreen-toggle">Fullscreen</p>
@@ -79,8 +75,12 @@
         </div>
         
         <div class="haku">
+            
             <div id="toolBox" class="toolBox bg-light p-3">
+                
+               
                 <h5 class="mb-3">Reittivalinnat</h5> <span id="removeRoutes">Tyhjennä</span>
+                <div class="notification hide">Maisemanavigointi käytössä</div>
                 <div class="mb-2">
                     <label for="startPoint">Lähtöpiste:</label>
                     <input type="text" id="startPoint" class="form-control" placeholder="Anna lähtöpiste">
@@ -103,7 +103,7 @@
         </div>
     </div>
 
-    <script type="module" src="javascript/addresses.js"></script>
+    <script type="module" src="javascript/utils.js"></script>
 
 </body>
 </html>

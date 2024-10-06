@@ -1,6 +1,6 @@
 // Pyykkönen
 // Osoitteiden autom.ehdotus
-import {apiKeyHERE} from "../javascript/config.js";
+import {apiKeyHERE} from "./config.js";
 
 const startPointInput = document.getElementById('startPoint');
 const endPointInput = document.getElementById('endPoint');
@@ -101,50 +101,28 @@ document.addEventListener('click', function(event) {
 });
 
 
+// Piilotetaan hakukentät kun aloitetaan navigointi 
 
-// Tyhjätään osoitteet, esim uutta hakua varten (tähän vielä reitin tyhjäys kartalta)
 const startPointDiv = document.getElementById('startPoint').parentElement;
 const endPointDiv = document.getElementById('endPoint').parentElement;
 const findRouteButton = document.getElementById('findRoute');
-const routeDistance = document.getElementById("routeDistance");
-const deleteRoute = document.getElementById("removeRoutes");
 
-
-document.getElementById("removeRoutes").addEventListener("click", function() {
-    document.getElementById("startPoint").value = "";
-    document.getElementById("endPoint").value = "";
-    routeDistance.style.display = "none";
-});
-
-// Piilotetaan hakukentät kun aloitetaan navigointi 
 document.getElementById('navigateRoute').addEventListener('click', function() {
-    startPointDiv.classList.toggle('hide');
-    endPointDiv.classList.toggle('hide');
-    findRouteButton.classList.toggle('hide');
-    deleteRoute.classList.toggle('hide');
-});
-
-
-// Maisemareitille valinta
-document.getElementById('toggle-maisema').addEventListener('click', function() {
-    const maisemaOptions = document.getElementById('maisema-options');
-    if (maisemaOptions.style.display === 'none' || maisemaOptions.style.display === '') {
-        maisemaOptions.style.display = 'block';
+    if (startPointDiv.style.display === 'none') {
+        startPointDiv.style.display = 'block';
+        endPointDiv.style.display = 'block';
+        findRouteButton.style.display = 'block';
     } else {
-        maisemaOptions.style.display = 'none';
+        startPointDiv.style.display = 'none';
+        endPointDiv.style.display = 'none';
+        findRouteButton.style.display = 'none';
     }
-});
-
-const radioButtons = document.querySelectorAll('input[name="maisema"]');
-radioButtons.forEach(function(radio) {
-    radio.addEventListener('change', function() {
-        const maisemaOptions = document.getElementById('maisema-options');
-        maisemaOptions.style.display = 'none';
-    });
+    
 });
 
 
-// Fullscreen tila
+
+// Fullscreen tila 
 document.getElementById('fullscreen-toggle').addEventListener('click', function() {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen();
