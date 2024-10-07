@@ -9,8 +9,12 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="shortcut icon" href="images/kompassi.png" type="image/x-icon">
     <script src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script>
     <script src="https://js.api.here.com/v3/3.1/mapsjs-service.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Averia+Serif+Libre:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Exo+2:ital,wght@0,100..900;1,100..900&family=Laila:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    
 
 </head>
 <body>
@@ -20,18 +24,27 @@
             <img id="findMyLocation" src="images/location.png" alt="current-location-icon" onclick="handlePermission(true)">
         </div>
     </div>
-        <div id="settings-panel" class="settings-panel">
-            <p>Info</p>
-            <div class="maisema-selection">
-                <p id="toggle-maisema" style="cursor: pointer;">Maisemareitti</p>
-                <label class="switch hide" id="maisema-switch"> 
-                    <input type="checkbox" id="maisema-checkbox">
-                    <span class="slider"></span>
-                </label>
-                <span class="switchText hide" id="switch-text">Ei käytössä</span>
-            </div>
-            <p id="fullscreen-toggle">Fullscreen</p>
+    <div id="settings-panel" class="settings-panel">
+        <p id="toggle-info">Info</p>
+        <div class="maisema-selection">
+            <p id="toggle-maisema" style="cursor: pointer;">Maisemareitti</p>
+            <label class="switch hide" id="maisema-switch"> 
+                <input type="checkbox" id="maisema-checkbox">
+                <span class="slider"></span>
+            </label>
+            <span class="switchText hide" id="switch-text">Ei käytössä</span>
         </div>
+        <p id="fullscreen-toggle">Fullscreen</p>
+    </div>
+    
+    <div class="video-container hide" id="info">
+        <video src="videos/tie.mp4" autoplay loop muted></video>
+        <p class="overlay-text">Verkkoselainpohjainen navigointiohjelma, joka opastaa käyttämään jotain muuta, 
+            kuin nopeinta tai lyhyintä reittiä. Javascriptillä ohjelmoitu koodi pyrkii estämään 
+            reittisuunnittelun moottori- ja maanteitä pitkin, ja opastaa kuljettajan vaihtoehtoisia kiertoteitä 
+            ja pienempien katujen kautta, mikäli vain mahdollista.</p>
+    </div>
+    
     
     
 

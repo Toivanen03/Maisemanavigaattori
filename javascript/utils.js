@@ -105,39 +105,68 @@ document.addEventListener('click', function(event) {
 
 
 // Maisemareitille valinta
-const panel = document.getElementById('settings-panel');
-const icon = document.getElementById('settings-icon');
+
+const infoBox = document.getElementById('info');
 const maisemaSwitch = document.getElementById('maisema-switch');
 const switchText = document.getElementById('switch-text');
 const notification = document.querySelector('.notification');
+const settingsPanel = document.getElementById('settings-panel');
+const settingsIcon = document.getElementById('settings-icon');
 
+// Asetukset piiloon
+function closeAllSettings() {
+    infoBox.classList.add('hide');
+    maisemaSwitch.classList.add('hide');
+    switchText.classList.add('hide');
+}
 
-document.getElementById('toggle-maisema').addEventListener('click', function(event) {
-    maisemaSwitch.classList.toggle('hide');
-    switchText.classList.toggle('hide');
+// Infoa
+document.getElementById('toggle-info').addEventListener('click', function(event) {
+    if (!infoBox.classList.contains('hide')) {
+        closeAllSettings();
+    } else {
+        closeAllSettings();
+        infoBox.classList.remove('hide');
+    }
     event.stopPropagation();
 });
 
-document.addEventListener('click', function(event) {
-    if (!panel.contains(event.target) && !icon.contains(event.target)) {
-        panel.classList.remove('show');
-        maisemaSwitch.classList.add('hide');
-        switchText.classList.add('hide');
+// Maisemareitti-kytkintä
+document.getElementById('toggle-maisema').addEventListener('click', function(event) {
+    if (!maisemaSwitch.classList.contains('hide')) {
+        closeAllSettings();
+    } else {
+        closeAllSettings();
+        maisemaSwitch.classList.remove('hide');
+        switchText.classList.remove('hide');
     }
+    event.stopPropagation();
 });
+
 
 document.getElementById('maisema-checkbox').addEventListener('change', function() {
     if (this.checked) {
         switchText.textContent = "Käytössä";
         notification.classList.remove('hide');
         console.log('Maisemareitti käytössä');
-        // tähän se itse maisema-toiminto
-        console.log('Maisemareitti?',filteredWays);
+        console.log('Maisemareitti?', filteredWays);
     } else {
         switchText.textContent = "Ei käytössä";
         notification.classList.add('hide');
         console.log('Maisemareitti ei käytössä');
     }
+});
+
+// Suljetaan asetuksia
+document.addEventListener('click', function(event) {
+    if (!settingsPanel.contains(event.target) && !settingsIcon.contains(event.target)) {
+        closeAllSettings();
+    }
+});
+
+
+settingsIcon.addEventListener('click', function() {
+    closeAllSettings();
 });
 
 
