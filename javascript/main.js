@@ -5,7 +5,7 @@ let map;                                                                    // A
 let currentRouteLayer = null;                                               //                          - Reittikerros
 let startMarker, endMarker;                                                 //                          - Alku- ja loppumerkit
 let currentMarkerType = 'end';                                              //                          - Merkin tyyppi (myöhemmin start tai end)
-let filteredWays;                                                           //                          - Suodatetut reitit
+export let filteredWays;                                                           //                          - Suodatetut reitit
 let displayAddress;                                                         //                          - Osoitteen esittämisen muuttujat
 let geocodedStartAddress;
 let geocodedDestinationAddress;
@@ -47,36 +47,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         const data = await response.json();
         filteredWays = processMapData(data);
 
-        // Maisemareitille valinta /MP
-        document.getElementById('toggle-maisema').addEventListener('click', function(event) {
-            const maisemaOptions = document.getElementById('maisema-options');
-            if (maisemaOptions.classList.contains('hide')) {
-                maisemaOptions.classList.remove('hide');
-            } else {
-                maisemaOptions.classList.add('hide');
-            }
-            event.stopPropagation();
-        });
-
-        const radioButtons = document.querySelectorAll('input[name="maisema"]');
-        radioButtons.forEach(function(radio) {
-            radio.addEventListener('change', function() {
-                const notification = document.querySelector('.notification');
-                if (radio.value === 'kylla' && radio.checked) {
-                    notification.classList.remove('hide');
-                 
-                    console.log('Maisemareitti käytössä?', filteredWays);
-                } else {
-                    notification.classList.add('hide');
-                }
-                document.getElementById('maisema-options').classList.add('hide');
-            });
-        });
-
-        document.addEventListener('click', function() {
-            document.getElementById('maisema-options').classList.add('hide');
-        });
-
+        
+    
 
         } 
         catch (err) {
@@ -147,18 +119,13 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 
 // Tyhjätään osoitteet, esim uutta hakua varten (tähän vielä reitin tyhjäys kartalta)
-const startPointDiv = document.getElementById('startPoint').parentElement;
-const endPointDiv = document.getElementById('endPoint').parentElement;
-const findRouteButton = document.getElementById('findRoute');
-const routeDistance = document.getElementById("routeDistance");
-const deleteRoute = document.getElementById("removeRoutes");
 
+const routeDistance = document.getElementById("routeDistance");
 function removeRoute() {
     if (currentRouteLayer) {
         map.removeLayer(currentRouteLayer);
         currentRouteLayer = null;
     }
-   
 }
 
 document.getElementById("removeRoutes").addEventListener("click", function() {
@@ -167,9 +134,6 @@ document.getElementById("removeRoutes").addEventListener("click", function() {
     routeDistance.style.display = "none";
     removeRoute();
 });
-
-
-
 
 
 

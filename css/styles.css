@@ -82,6 +82,62 @@ body{
     top: 0;
 }
 
+.switch {
+    position: relative;
+    display: block;
+    width: 60px;
+    height: 30px;
+    margin: 0 auto;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    border-radius: 30px;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    border-radius: 50%;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: #66bb6a;
+}
+
+input:checked + .slider:before {
+    transform: translateX(30px);
+}
+
+.switchText {
+    line-height: 30px;
+    font-size: 16px;
+  
+}
+
+.maisema-selection {
+    text-align: center;
+}
+
 
 #removeRoutes{
     position: absolute;
@@ -208,25 +264,24 @@ body{
 
 
 @media (max-width: 600px) {
-  
+
+   
     #map-container{
         height: 90vh;
-      
     }
-    .map{
-        height: 90vh;
-    }
-
-    .toolBox {
+  
+ 
+    #toolBox {
         position: absolute;
-        bottom: 20px;
+        bottom: 30px;
         left: 50%;
         transform: translateX(-50%);
         width: 95%;
         max-width: 400px;
     }
 
-    #settings-panel {
+    .settings-panel {
+    
         flex-direction: column;
         text-align: center;
     }

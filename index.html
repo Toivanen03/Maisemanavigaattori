@@ -24,10 +24,11 @@
             <p>Info</p>
             <div class="maisema-selection">
                 <p id="toggle-maisema" style="cursor: pointer;">Maisemareitti</p>
-                <div id="maisema-options" class="hide">
-                    <input type="radio" name="maisema" value="kylla"> Käytössä<br>
-                    <input type="radio" name="maisema" value="ei"> Ei käytössä<br>
-                </div>
+                <label class="switch hide" id="maisema-switch"> 
+                    <input type="checkbox" id="maisema-checkbox">
+                    <span class="slider"></span>
+                </label>
+                <span class="switchText hide" id="switch-text">Ei käytössä</span>
             </div>
             <p id="fullscreen-toggle">Fullscreen</p>
         </div>

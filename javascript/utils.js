@@ -1,6 +1,7 @@
 // Pyykkönen
 // Osoitteiden autom.ehdotus
 import {apiKeyHERE} from "./config.js";
+import {filteredWays} from "./main.js";
 
 const startPointInput = document.getElementById('startPoint');
 const endPointInput = document.getElementById('endPoint');
@@ -84,7 +85,7 @@ document.addEventListener('click', function(event) {
 
 
 
-// Valikko mahdollisille asetuksille?
+// Valikko asetuksille
 document.getElementById('settings-icon').addEventListener('click', function(event) {
     event.stopPropagation();
     const panel = document.getElementById('settings-panel');
@@ -94,11 +95,51 @@ document.getElementById('settings-icon').addEventListener('click', function(even
 document.addEventListener('click', function(event) {
     const panel = document.getElementById('settings-panel');
     const icon = document.getElementById('settings-icon');
+    const maisema = document.getElementById('maisema-switch');
 
     if (!panel.contains(event.target) && !icon.contains(event.target)) {
         panel.classList.remove('show');
+        maisema.classList.add('hide');
     }
 });
+
+
+// Maisemareitille valinta
+const panel = document.getElementById('settings-panel');
+const icon = document.getElementById('settings-icon');
+const maisemaSwitch = document.getElementById('maisema-switch');
+const switchText = document.getElementById('switch-text');
+const notification = document.querySelector('.notification');
+
+
+document.getElementById('toggle-maisema').addEventListener('click', function(event) {
+    maisemaSwitch.classList.toggle('hide');
+    switchText.classList.toggle('hide');
+    event.stopPropagation();
+});
+
+document.addEventListener('click', function(event) {
+    if (!panel.contains(event.target) && !icon.contains(event.target)) {
+        panel.classList.remove('show');
+        maisemaSwitch.classList.add('hide');
+        switchText.classList.add('hide');
+    }
+});
+
+document.getElementById('maisema-checkbox').addEventListener('change', function() {
+    if (this.checked) {
+        switchText.textContent = "Käytössä";
+        notification.classList.remove('hide');
+        console.log('Maisemareitti käytössä');
+        // tähän se itse maisema-toiminto
+        console.log('Maisemareitti?',filteredWays);
+    } else {
+        switchText.textContent = "Ei käytössä";
+        notification.classList.add('hide');
+        console.log('Maisemareitti ei käytössä');
+    }
+});
+
 
 
 // Piilotetaan hakukentät kun aloitetaan navigointi 
@@ -119,6 +160,7 @@ document.getElementById('navigateRoute').addEventListener('click', function() {
     }
     
 });
+
 
 
 
