@@ -7,6 +7,7 @@ const startPointInput = document.getElementById('startPoint');
 const endPointInput = document.getElementById('endPoint');
 const startSuggestionsList = document.getElementById('startSuggestionsList');
 const endSuggestionsList = document.getElementById('endSuggestionsList');
+let sceneryRouting = false;
 
 // Haetaan herestä osoitteet
 function fetchSuggestions(query, suggestionsList) {
@@ -146,14 +147,13 @@ document.getElementById('toggle-maisema').addEventListener('click', function(eve
 
 document.getElementById('maisema-checkbox').addEventListener('change', function() {
     if (this.checked) {
+        sceneryRouting = true;                      // Lisätty muuttuja maisemareitin käytölle   - ST
         switchText.textContent = "Käytössä";
         notification.classList.remove('hide');
-        console.log('Maisemareitti käytössä');
-        console.log('Maisemareitti?', filteredWays);
     } else {
+        sceneryRouting = false;
         switchText.textContent = "Ei käytössä";
         notification.classList.add('hide');
-        console.log('Maisemareitti ei käytössä');
     }
 });
 

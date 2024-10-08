@@ -5,7 +5,7 @@ let map;                                                                    // A
 let currentRouteLayer = null;                                               //                          - Reittikerros
 let startMarker, endMarker;                                                 //                          - Alku- ja loppumerkit
 let currentMarkerType = 'end';                                              //                          - Merkin tyyppi (myöhemmin start tai end)
-export let filteredWays;                                                           //                          - Suodatetut reitit
+export let filteredWays;                                                    //                          - Suodatetut reitit
 let displayAddress;                                                         //                          - Osoitteen esittämisen muuttujat
 let geocodedStartAddress;
 let geocodedDestinationAddress;
@@ -46,10 +46,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         const response = await fetch('mapdata/heinola.json');
         const data = await response.json();
         filteredWays = processMapData(data);
-
-        
-    
-
         } 
         catch (err) {
             console.error('Virhe ladattaessa JSON-tiedostoa:', err);
@@ -104,7 +100,6 @@ function removeRoute() {
         map.removeLayer(startMarker);
         startMarker = null;
     }
-
     if (endMarker) {
         map.removeLayer(endMarker);
         endMarker = null;
