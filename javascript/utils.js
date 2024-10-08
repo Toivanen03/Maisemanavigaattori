@@ -1,13 +1,21 @@
 // Pyykkönen
 // Osoitteiden autom.ehdotus
 import {apiKeyHERE} from "./config.js";
-import {filteredWays} from "./main.js";
 
 const startPointInput = document.getElementById('startPoint');
 const endPointInput = document.getElementById('endPoint');
 const startSuggestionsList = document.getElementById('startSuggestionsList');
 const endSuggestionsList = document.getElementById('endSuggestionsList');
+
 let sceneryRouting = false;
+
+export function getSceneryRouting() {
+    return sceneryRouting;
+}
+
+export function setSceneryRouting(value) {
+    sceneryRouting = value;    
+}
 
 // Haetaan herestä osoitteet
 function fetchSuggestions(query, suggestionsList) {
@@ -146,15 +154,9 @@ document.getElementById('toggle-maisema').addEventListener('click', function(eve
 
 
 document.getElementById('maisema-checkbox').addEventListener('change', function() {
-    if (this.checked) {
-        sceneryRouting = true;                      // Lisätty muuttuja maisemareitin käytölle   - ST
-        switchText.textContent = "Käytössä";
-        notification.classList.remove('hide');
-    } else {
-        sceneryRouting = false;
-        switchText.textContent = "Ei käytössä";
-        notification.classList.add('hide');
-    }
+    setSceneryRouting(this.checked);
+    switchText.textContent = this.checked ? "Käytössä" : "Ei käytössä";
+    notification.classList.toggle('hide', !this.checked);
 });
 
 // Suljetaan asetuksia

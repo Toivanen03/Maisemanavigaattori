@@ -1,4 +1,17 @@
-export function processMapData(data) {
+import { getSceneryRouting } from './utils.js';
+let sceneryRouting = getSceneryRouting();
+
+
+try { // Haetaan Overpass Turbolla luotu JSON-data sallituista teistä (pienet tiet ja kadut Heinolan keskustan alueella, suodatus ei vielä toiminnassa)
+    const response = await fetch('mapdata/heinola.json');
+    const data = await response.json();
+    filteredWays = processMapData(data);
+    } 
+    catch (err) {
+        console.error('Virhe ladattaessa JSON-tiedostoa:', err);
+    }
+
+function processMapData(data) {
     return data.elements.filter(element => {
         return element.type === 'way' &&
             element.tags.highway &&

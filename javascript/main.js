@@ -1,11 +1,9 @@
 import { apiKey, apiKeyHERE } from './config.js';                           // Ladataan API-avaimet
-import { processMapData } from './routeFilter.js';                          // Tuodaan suodatustoiminnot
 
 let map;                                                                    // Alustetaan muuttujat:    - Karttapohja
 let currentRouteLayer = null;                                               //                          - Reittikerros
 let startMarker, endMarker;                                                 //                          - Alku- ja loppumerkit
 let currentMarkerType = 'end';                                              //                          - Merkin tyyppi (myöhemmin start tai end)
-export let filteredWays;                                                    //                          - Suodatetut reitit
 let displayAddress;                                                         //                          - Osoitteen esittämisen muuttujat
 let geocodedStartAddress;
 let geocodedDestinationAddress;
@@ -41,15 +39,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('decline-cookies').addEventListener('click', function() {
         window.location.href = "https://www.google.fi";
     });
-
-    try { // Haetaan Overpass Turbolla luotu JSON-data sallituista teistä (pienet tiet ja kadut Heinolan keskustan alueella, suodatus ei vielä toiminnassa)
-        const response = await fetch('mapdata/heinola.json');
-        const data = await response.json();
-        filteredWays = processMapData(data);
-        } 
-        catch (err) {
-            console.error('Virhe ladattaessa JSON-tiedostoa:', err);
-        }
 
     document.getElementById('startPoint').addEventListener('blur', function() {     // Tapahtumakuuntelija tarkistaa lähtöpaikan syöttökentästä poistumisen
         const startAddress = document.getElementById('startPoint').value;           // Syötetyn osoitteen arvo luetaan kentästä,
