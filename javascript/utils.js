@@ -1,20 +1,15 @@
 // Pyykkönen
 // Osoitteiden autom.ehdotus
 import {apiKeyHERE} from "./config.js";
+import { updateSceneryRouting } from "./routeFilter.js";
 
 const startPointInput = document.getElementById('startPoint');
 const endPointInput = document.getElementById('endPoint');
 const startSuggestionsList = document.getElementById('startSuggestionsList');
 const endSuggestionsList = document.getElementById('endSuggestionsList');
 
-let sceneryRouting = false;
-
-export function getSceneryRouting() {
-    return sceneryRouting;
-}
-
 export function setSceneryRouting(value) {
-    sceneryRouting = value;    
+    updateSceneryRouting(value);
 }
 
 // Haetaan herestä osoitteet
