@@ -57,37 +57,11 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     document.getElementById('startPoint').addEventListener('blur', function() {     // Tapahtumakuuntelija tarkistaa lähtöpaikan syöttökentästä poistumisen
         const startAddress = document.getElementById('startPoint').value;           // Syötetyn osoitteen arvo luetaan kentästä,
-        geocodeAddress(startAddress, function(startLat, startLng) {                 // Välitetään koordinaattien hakemiseksi,
-            if (startLat && startLng) {                                             // Vastaanotetut koordinaatit välitetään ensin koordinaattikenttiin...
-                document.getElementById('startPointCoords').value = startLat + ', ' + startLng;
-                reverseGeocode(startLat, startLng, function(formattedAddress) {     // ...ja välitetään käänteisen geokoodauksen funktiokutsuun.
-                    geocodedStartAddress = formattedAddress;                        // Vastaanotettu ja muotoiltu osoite tallennetaan muuttujaan
-                    if (startMarker) {                                              // Jos alkumerkki on jo kartalla, merkin sijainti päivitetään,
-                        startMarker.setLatLng([startLat, startLng]).update();
-                    } else {
-                        startMarker = L.marker([startLat, startLng]).addTo(map);    // muutoin asetetaan uusi merkki.
-                    }
-                    document.getElementById('startPoint').value = geocodedStartAddress; // Käänteisesti geokoodattu ja muotoiltu osoite asetetaan syöttökenttään.
-                });                                                                 // Näin esimerkiksi kaupan tai kaupungin nimellä tehty haku tulostuu
-            }                                                                       // varsinaisena osoitteena käyttäjän luettavaksi. 
-        });
+        callForGeocoding('start', startAddress);
     });
     document.getElementById('endPoint').addEventListener('blur', function() {       // Loppumerkillä täysin vastaava käsittely kuin alkumerkillä
         const endAddress = document.getElementById('endPoint').value;
-        geocodeAddress(endAddress, function(endLat, endLng) {
-            if (endLat && endLng) {
-                document.getElementById('endPointCoords').value = endLat + ', ' + endLng;
-                reverseGeocode(endLat, endLng, function(formattedAddress) {
-                    geocodedDestinationAddress = formattedAddress;
-                    if (endMarker) {
-                        endMarker.setLatLng([endLat, endLng]).update();
-                    } else {
-                        endMarker = L.marker([endLat, endLng]).addTo(map);
-                    }
-                    document.getElementById('endPoint').value = geocodedDestinationAddress;
-                });
-            }
-        });
+        callForGeocoding('end', endAddress);
     });
 
     document.getElementById('findRoute').addEventListener('click', function() {     // Tapahtumakuuntelija käsittelee reittihakupainikkeen
@@ -126,6 +100,16 @@ function removeRoute() {
         map.removeLayer(currentRouteLayer);
         currentRouteLayer = null;
     }
+    if (startMarker) {
+        map.removeLayer(startMarker);
+        startMarker = null;
+    }
+
+    if (endMarker) {
+        map.removeLayer(endMarker);
+        endMarker = null;
+    }
+    currentMarkerType = 'start';
 }
 
 document.getElementById("removeRoutes").addEventListener("click", function() {
@@ -225,6 +209,33 @@ function getRoute(startLat, startLng, endLat, endLng) {     // Reitinhakufunktio
         })
         .catch(err => console.error('Virhe:', err));                                        // Tulostetaan virhe konsoliin, mikäli reittiä ei löydy
         placeAddressOnPopups();
+}
+
+
+
+
+function callForGeocoding(place, address) {
+    geocodeAddress(address, function(lat, lng) {
+        if (lat && lng) {
+            if (place === 'start') {                                    // Vastaanotetut koordinaatit välitetään ensin koordinaattikenttiin...
+                document.getElementById('startPointCoords').value = lat + ', ' + lng;
+            } else {
+                document.getElementById('endPointCoords').value = lat + ', ' + lng;
+            }
+            reverseGeocode(lat, lng, function(formattedAddress) {       // ...ja välitetään käänteisen geokoodauksen funktiokutsuun.
+                let coordinates = {
+                    lat: lat,
+                    lng: lng
+                };
+                placeMarker(currentMarkerType, coordinates, formattedAddress)   // Asetetaan merkit kartalle
+                if (place === 'start') {
+                    document.getElementById('startPoint').value = formattedAddress; // Käänteisesti geokoodattu ja muotoiltu osoite asetetaan syöttökenttään.
+                } else {                                                            // Näin esimerkiksi kaupan tai kaupungin nimellä tehty haku tulostuu
+                    document.getElementById('endPoint').value = formattedAddress;   // varsinaisena osoitteena käyttäjän luettavaksi. 
+                }
+            });                                                                 
+        }                                                                       
+    });
 }
 
 
@@ -341,6 +352,34 @@ function drawMap(lat, lng, zoomLevel) {
             });
         }
     });
+}
+
+
+
+
+function placeMarker(markerType, coordinates, address) {
+    const latLngString = coordinates.lat.toFixed(5) + ', ' + coordinates.lng.toFixed(5);    // Tallennetaan muuttujaan kartalta koordinaatit ja pyöristetään
+    if (markerType === 'start'){                                                            // Lohkossa päivitetään aloitusmerkin sijainti. Ensimmäinen asettaminen tapahtuu, kun sivu ladataan.
+        if (startMarker) {
+            startMarker.setLatLng(coordinates).update();
+        } else {
+            startMarker = L.marker(coordinates).addTo(map);
+        }
+        document.getElementById('startPointCoords').value = latLngString;                   // Asetetaan merkin koordinaatit piilotettuun syöttökenttään
+        document.getElementById('startPoint').value = address || latLngString;
+        geocodedStartAddress = address;                                                     // Päivitetään osoitemuuttuja
+    }
+    if (markerType === 'end') {                                                             // Loppumerkki käsitellään samoin kuin alkumerkki
+        if (endMarker) {    
+            endMarker.setLatLng(coordinates).update();
+        } else {
+            endMarker = L.marker(coordinates).addTo(map);
+        }
+        document.getElementById('endPointCoords').value = latLngString;
+        document.getElementById('endPoint').value = address || latLngString;
+        geocodedDestinationAddress = address
+    }
+    placeAddressOnPopups();                                                                 // Päivitetään osoite kuplassa
 }
    
 
