@@ -1,4 +1,11 @@
 import { apiKey, apiKeyHERE } from './config.js';                           // Ladataan API-avaimet
+export let geojsonData;                                                     // Reittitiedot
+let sceneryRouting;                                                         // True tai false sen mukaan, onko valittuna perinteinen vai maisemanavigointi
+import { getApprovedRoutes } from './routeFilter.js';                       // Reittien suodatus
+export function updateSceneryRouting(value) {                               // Päivittää tiedon maisemanavigoinnista tiedostojen välillä
+    sceneryRouting = value;
+    getApprovedRoutes();    
+}
 
 let map;                                                                    // Alustetaan muuttujat:    - Karttapohja
 let currentRouteLayer = null;                                               //                          - Reittikerros
@@ -170,8 +177,10 @@ function getRoute(startLat, startLng, endLat, endLng) {     // Reitinhakufunktio
             
             if (data.features && data.features.length > 0) {// Tarkistetaan, onko palvelimelta vastaanotettu mitään
                 let route = data.features[0];
-                let geojsonData = route.geometry;           // Muuttuja sisältää reitin geometrian, eli koordinaattitiedot
-
+                geojsonData = route.geometry;           // Muuttuja sisältää reitin geometrian, eli koordinaattitiedot
+                if (sceneryRouting) {
+                    getApprovedRoutes();
+                }
                 if (currentRouteLayer) {                    // Olemassaoleva karttakerros poistetaan, jos reittiä on jo haettu aiemmin
                     map.removeLayer(currentRouteLayer);
                 }
@@ -225,7 +234,7 @@ function callForGeocoding(place, address) {
 
 
 
-function geocodeAddress(address, callback) {
+function geocodeAddress(address, callback) {                        // Geokoodaus kääntää osoitteet koordinaateiksi, joiden avulla varsinainen reittihaku tapahtuu
     if (address !== "") {                                           // Varmistetaan, ettei osoite ole tyhjä ja haetaan koordinaatit HERE-palvelimelta. Hakupyynnössä on haettava osoite sekä palveluun rekisteröityessä saatu API-avain
         const url = `https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(address)}&apiKey=${apiKeyHERE}`;
         fetch(url)
@@ -256,7 +265,7 @@ function geocodeAddress(address, callback) {
 
 
 
-function reverseGeocode(lat, lng, callback) {
+function reverseGeocode(lat, lng, callback) {                       // Käänteinen geokoodaus muuntaa koordinaatit osoitteeksi HEREn avulla
     const url = `https://revgeocode.search.hereapi.com/v1/revgeocode?at=${lat},${lng}&apiKey=${apiKeyHERE}`;
     fetch(url)
         .then(response => response.json())
@@ -284,7 +293,7 @@ function reverseGeocode(lat, lng, callback) {
 
 
 
-function drawMap(lat, lng, zoomLevel) {    
+function drawMap(lat, lng, zoomLevel) {                                     // Kartan piirtofunktio
     document.getElementById('map').style.cursor = 'crosshair';
     if (map) {                                                              // Jos sivulla on jo kartta, estetään päällekkäisyys poistamalla vanha kartta ennen uuden piirtoa
         map.remove();
@@ -316,21 +325,9 @@ function drawMap(lat, lng, zoomLevel) {
                         streetAndNumber[0] + " " + streetAndNumber[1] + ", " + addressParts[1]; // Jos numero löytyy, displayAddress saa arvon "kadunnimi numero, kaupunki"
                     }
                 if (currentMarkerType === 'start') {        // Lohkossa päivitetään aloitusmerkin sijainti. Ensimmäinen asettaminen tapahtuu, kun sivu ladataan.
-                    if (startMarker) {
-                        startMarker.setLatLng(e.latlng).update();
-                    }
-                    document.getElementById('startPointCoords').value = latLngString;       // Asetetaan merkin koordinaatit piilotettuun syöttökenttään
-                    document.getElementById('startPoint').value = address || latLngString;
-                    geocodedStartAddress = address;                                 // Päivitetään osoitemuuttuja
+                    placeMarker(currentMarkerType, e.latlng, address);
                 } else if (currentMarkerType === 'end') {                           // Loppumerkin lohko muuten sama kuin yllä, mutta sisältää myös
-                    if (endMarker) {                                                // merkin asettamisen ensimmäisen kerran.
-                        endMarker.setLatLng(e.latlng).update();
-                    } else {
-                        endMarker = L.marker(e.latlng).addTo(map);
-                    }
-                    document.getElementById('endPointCoords').value = latLngString;
-                    document.getElementById('endPoint').value = address || latLngString;
-                    geocodedDestinationAddress = address
+                    placeMarker(currentMarkerType, e.latlng, address);
                 }
                 placeAddressOnPopups();                                             // Päivitetään osoite kuplassa
             });
@@ -341,7 +338,7 @@ function drawMap(lat, lng, zoomLevel) {
 
 
 
-function placeMarker(markerType, coordinates, address) {
+function placeMarker(markerType, coordinates, address) {                                    // Asettaa markerit kartalle
     const latLngString = coordinates.lat.toFixed(5) + ', ' + coordinates.lng.toFixed(5);    // Tallennetaan muuttujaan kartalta koordinaatit ja pyöristetään
     if (markerType === 'start'){                                                            // Lohkossa päivitetään aloitusmerkin sijainti. Ensimmäinen asettaminen tapahtuu, kun sivu ladataan.
         if (startMarker) {

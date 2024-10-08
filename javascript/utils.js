@@ -1,7 +1,7 @@
 // Pyykkönen
 // Osoitteiden autom.ehdotus
 import {apiKeyHERE} from "./config.js";
-import { updateSceneryRouting } from "./routeFilter.js";
+import { updateSceneryRouting } from "./main.js";
 
 const startPointInput = document.getElementById('startPoint');
 const endPointInput = document.getElementById('endPoint');
