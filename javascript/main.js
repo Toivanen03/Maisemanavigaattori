@@ -9,6 +9,7 @@ let geocodedDestinationAddress;
 
 import { apiKey, apiKeyHERE } from './config.js';                           // Ladataan API-avaimet
 import { getApprovedRoutes } from './routeFilter.js';                       // Reittien suodatus
+import { updateRoute } from './routeFilter.js';
 
 export let geojsonData;                                                     // Reittikoordinaatit
 export let routeVerified = { validRoute: false };                           // True tai false tarkistettujen koordinaattien mukaisesti
@@ -177,25 +178,36 @@ async function getRoute(startLat, startLng, endLat, endLng) {   // Reitinhakufun
         const data = await response.json();    
             if (data.features && data.features.length > 0) {    // Tarkistetaan, onko palvelimelta vastaanotettu mitään
                 let route = data.features[0];
-                geojsonData = route.geometry;                   // Muuttuja sisältää reitin geometrian, eli koordinaattitiedot
-                if (sceneryRouting && startMarker && endMarker) {
-                    await getApprovedRoutes();
+                geojsonData = route.geometry;                   // Muuttuja sisältää reitin geometrian, eli koordinaattitiedot        
+                if (sceneryRouting) {
+                    await getApprovedRoutes()
+                    await updateRoute(route);
+                    geojsonData = route;
                 }            
                 if (routeVerified.validRoute || !sceneryRouting) {
                     if (currentRouteLayer) {                    // Olemassaoleva karttakerros poistetaan, jos reittiä on jo haettu aiemmin
                         map.removeLayer(currentRouteLayer);
                     }
+                    let routeGeometry;
+                    if (geojsonData.type === 'Feature') {
+                        routeGeometry = geojsonData.geometry;
+                    } else {
+                        routeGeometry = geojsonData;
+                    }
+                    currentRouteLayer = L.geoJSON(routeGeometry).addTo(map);                      // Asetetaan reittikerros kartalle
 
-                    currentRouteLayer = L.geoJSON(geojsonData).addTo(map);                      // Asetetaan reittikerros kartalle
-
-                    // tähän reitin pituus?
-                    const distance = route.properties.segments[0].distance;
+                    let distance;
+                    if (geojsonData.type === 'Feature') {
+                    distance = geojsonData.properties.segments[0].distance;
+                    } else {
+                        distance = geojsonData.properties.distance;
+                    }
                     const routeDistanceDiv = document.getElementById('routeDistance');
                     routeDistanceDiv.textContent = `Matka: ${(distance / 1000).toFixed(2)} km`; // Muokattu näyttämään oikein -ST
                     routeDistanceDiv.style.display = 'block';
                     routeDistanceDiv.style.textAlign = 'center';
 
-                    if (geojsonData.coordinates.length > 0) {
+                    if (routeGeometry.coordinates.length > 0) {
                         map.fitBounds(currentRouteLayer.getBounds(), {padding: [100, 100]});    // Piirtää reitin marginaalin kanssa
                     }
                 }

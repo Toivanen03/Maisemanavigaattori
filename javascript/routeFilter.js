@@ -16,6 +16,10 @@ export async function getApprovedRoutes() { // Haetaan Overpass Turbolla luotu J
     verifyRoutes();                         // Reittitarkistusta kutsutaan, kun sallitut reitit on haettu
 }
 
+export async function updateRoute(route) {
+    return route;
+}
+
 
 
 
@@ -33,7 +37,7 @@ function verifyRoutes() {                                           // Koordinaa
         filteredWays.forEach((way) => {
             way.geometry.forEach((coordinate) => {
                 let coordStr = coordinate.lat.toFixed(4) + ', ' + coordinate.lon.toFixed(4);
-                filteredWaysCoords.push(coordStr)
+                filteredWaysCoords.push(coordStr)                
             });
         });
     }
@@ -115,7 +119,7 @@ function findAlternativeRoute(coordsToAvoid) {
     .then(data => {
         if (data.routes && data.routes.length > 0) {
             let geojsonData = data.routes[0].geometry;
-            return geojsonData;                             // Tässä
+            updateRoute(geojsonData);
         } else {
             console.error('Ei reittejä löytynyt.');
         }
