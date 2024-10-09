@@ -2,7 +2,7 @@ let map;                                                                    // A
 let currentRouteLayer = null;                                               //                          - Reittikerros
 let startMarker, endMarker;                                                 //                          - Alku- ja loppumerkit
 let currentMarkerType = 'end';                                              //                          - Merkin tyyppi (myöhemmin start tai end)
-let sceneryRouting;                                                         //                          - Perus- tai maisemanavigointi
+let sceneryRouting = true;                                                  //                          - Perus- tai maisemanavigointi
 let displayAddress;                                                         //                          - Osoitteen esittämisen muuttujat
 let geocodedStartAddress;
 let geocodedDestinationAddress;
@@ -13,7 +13,7 @@ import { getApprovedRoutes } from './routeFilter.js';                       // R
 export let geojsonData;                                                     // Reittikoordinaatit
 export let routeVerified = { validRoute: false };                           // True tai false tarkistettujen koordinaattien mukaisesti
 export function updateSceneryRouting(value) {                               // Päivittää tiedon maisemanavigoinnista tiedostojen välillä
-    sceneryRouting = value;  
+    sceneryRouting = value;
 }
 
 const defaultLat = 61.23345;                                                // Oletussijainti (ABC Heinola). Käytetään, mikäli selaimelle ei ole annettu lupaa sijainnin jakamiseen
