@@ -29,14 +29,14 @@ function verifyRoutes() {                                           // Koordinaa
 
     if (geojsonData && geojsonData.coordinates) {                   // Reittikoordinaatit main.js- tiedoston findRoute- funktiosta
         geojsonData.coordinates.forEach((coordinate) => {
-            let coordStr = coordinate[1].toFixed(4) + ', ' + coordinate[0].toFixed(4);
+            let coordStr = coordinate[0].toFixed(4) + ', ' + coordinate[1].toFixed(4);
             routeCoords.push(coordStr);
         });
     }
     if (filteredWays) {                                             // Sallitut reitit heinola.json -tiedostosta
         filteredWays.forEach((way) => {
             way.geometry.forEach((coordinate) => {
-                let coordStr = coordinate.lat.toFixed(4) + ', ' + coordinate.lon.toFixed(4);
+                let coordStr = coordinate.lon.toFixed(4) + ', ' + coordinate.lat.toFixed(4);
                 filteredWaysCoords.push(coordStr)                
             });
         });
@@ -67,7 +67,7 @@ function updateRouteState(value, validCoords, routeCoords) {                    
 
 
 
-function handleNewRoute(routeCoords) {
+function handleNewRoute(routeCoords) {    
     const coordsToAvoid = routeCoords.map(coordStr => {     // Koordinaatit muunnetaan numeerisiksi ja asetetaan oikein päin uuteen listaan
         const [lat, lng] = coordStr.split(',').map(Number);
         return [lng, lat];
@@ -76,7 +76,6 @@ function handleNewRoute(routeCoords) {
     if (coordsToAvoid[0][0] !== coordsToAvoid[coordsToAvoid.length -1][0] || coordsToAvoid[0][1] !== coordsToAvoid[coordsToAvoid.length -1][1]) {
         coordsToAvoid.push(coordsToAvoid[0]);               // Varmistetaan, että ensimmäinen koordinaatti on myös viimeisenä
     }
-
     const polygon = createPolygon(coordsToAvoid);           // Noudetaan polygoni, jota käytetään uudessa reittihaussa
     JSON.stringify(polygon, null, 2);
     findAlternativeRoute(polygon);
