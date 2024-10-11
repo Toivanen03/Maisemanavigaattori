@@ -1,13 +1,16 @@
 // Pyykkönen
 // Osoitteiden autom.ehdotus
 import {apiKeyHERE} from "./config.js";
-import { filteredWays } from "./main.js";
-import { processMapData } from "./routeFilter.js";
+import {filteredWays} from "./main.js";
 
 const startPointInput = document.getElementById('startPoint');
 const endPointInput = document.getElementById('endPoint');
 const startSuggestionsList = document.getElementById('startSuggestionsList');
 const endSuggestionsList = document.getElementById('endSuggestionsList');
+
+export function setSceneryRouting(value) {
+    updateSceneryRouting(value);
+}
 
 // Haetaan herestä osoitteet
 function fetchSuggestions(query, suggestionsList) {
@@ -150,9 +153,7 @@ document.getElementById('maisema-checkbox').addEventListener('change', function(
         switchText.textContent = "Käytössä";
         notification.classList.remove('hide');
         console.log('Maisemareitti käytössä');
-        // tähän filtteröidyt reitit?
-        console.log('Suodatetut tiet:', filteredWays);
- 
+        console.log('Maisemareitti?', filteredWays);
     } else {
         switchText.textContent = "Ei käytössä";
         notification.classList.add('hide');
