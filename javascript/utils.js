@@ -1,8 +1,6 @@
 // Pyykkönen
 // Osoitteiden autom.ehdotus
 import {apiKeyHERE} from "./config.js";
-import {filteredWays} from "./main.js";
-
 const startPointInput = document.getElementById('startPoint');
 const endPointInput = document.getElementById('endPoint');
 const startSuggestionsList = document.getElementById('startSuggestionsList');
@@ -153,7 +151,7 @@ document.getElementById('maisema-checkbox').addEventListener('change', function(
         switchText.textContent = "Käytössä";
         notification.classList.remove('hide');
         console.log('Maisemareitti käytössä');
-        console.log('Maisemareitti?', filteredWays);
+        console.log('Maisemareitti?');
     } else {
         switchText.textContent = "Ei käytössä";
         notification.classList.add('hide');
