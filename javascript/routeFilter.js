@@ -42,9 +42,9 @@ function verifyRoutes() {                                           // Koordinaa
         });
     }
 
-    const validCoords = routeCoords.filter(coord => filteredWaysCoords.includes(coord));        // Muunnettujen koordinaattien vertailu
+    let validCoords = routeCoords.filter(coord => filteredWaysCoords.includes(coord));        // Muunnettujen koordinaattien vertailu
     let coordsToAvoid = routeCoords.filter(coord => !filteredWaysCoords.includes(coord));       // Epäkelpojen koordinaattien tallennus
-
+    coordsToAvoid = coordsToAvoid.slice(2, -2);                                               // Poistetaan alusta ja lopusta koordinaatteja
     if (validCoords.length > 0 && validCoords.length >= (routeCoords.length * 0.8)) {           // Jos haettuja koordinaatteja on tarpeeksi, kutsutaan funktiota arvolla true
         updateRouteState(true, validCoords, routeCoords);
     } else {                                                                                    // Muutoin käsitellään falsena ja funktiokutsussa
@@ -68,15 +68,40 @@ function updateRouteState(value, validCoords, routeCoords) {                    
 
 
 function handleNewRoute(routeCoords) {    
-    const coordsToAvoid = routeCoords.map(coordStr => {     // Koordinaatit muunnetaan numeerisiksi ja asetetaan oikein päin uuteen listaan
+    let coordsToAvoid = routeCoords.map(coordStr => {     // Koordinaatit muunnetaan numeerisiksi ja asetetaan oikein päin uuteen listaan
         const [lat, lng] = coordStr.split(',').map(Number);
         return [lng, lat];
     })
+    drawPolygon(coordsToAvoid);
+}
+
+
+
+
+function drawPolygon(coordsToAvoid) {
+    for (let i = 0; i < coordsToAvoid.length; i++) {
+        coordsToAvoid[i] = [
+            parseFloat((coordsToAvoid[i][0] + 0.0005).toFixed(5)),          // Arvoihin lisätään hieman marginaalia
+            parseFloat((coordsToAvoid[i][1] + 0.0005).toFixed(5))
+        ];
+    }
+
+    const reversedCoords = coordsToAvoid.slice().reverse();                 // Luodaan uusi lista, johon tallennetaan vältettävät koordinaatit takaperin
+
+    for (let i = 0; i < reversedCoords.length; i++) {
+        reversedCoords[i] = [
+            parseFloat((reversedCoords[i][0] - 0.0010).toFixed(5)),         // Käännetyn listan arvoista vähennetään hieman
+            parseFloat((reversedCoords[i][1] - 0.0010).toFixed(5))
+        ];
+    }
+
+    coordsToAvoid.push(...reversedCoords);                                  // Lopuksi listat yhdistetään
 
     if (coordsToAvoid[0][0] !== coordsToAvoid[coordsToAvoid.length -1][0] || coordsToAvoid[0][1] !== coordsToAvoid[coordsToAvoid.length -1][1]) {
-        coordsToAvoid.push(coordsToAvoid[0]);               // Varmistetaan, että ensimmäinen koordinaatti on myös viimeisenä
+        coordsToAvoid.push(coordsToAvoid[0]);                               // Lisätään ensimmäinen koordinaatti on myös viimeiseksi
     }
-    const polygon = createPolygon(coordsToAvoid);           // Noudetaan polygoni, jota käytetään uudessa reittihaussa
+
+    const polygon = createPolygon(coordsToAvoid);
     JSON.stringify(polygon, null, 2);
     findAlternativeRoute(polygon);
 }
@@ -93,7 +118,9 @@ function createPolygon(coordsToAvoid) {
 
 
 
-function findAlternativeRoute(coordsToAvoid) {
+function findAlternativeRoute(polygon) {
+    console.log(polygon);
+    
     let [startLat, startLng] = document.getElementById('startPointCoords').value.split(',').map(part => parseFloat(part.trim()));
     let [endLat, endLng] = document.getElementById('endPointCoords').value.split(',').map(part => parseFloat(part.trim()));
     let startPoint = [startLng, startLat];
@@ -103,7 +130,7 @@ function findAlternativeRoute(coordsToAvoid) {
     const request = {
         coordinates: [startPoint, endPoint],
         options: {
-            avoid_polygons: coordsToAvoid
+            avoid_polygons: polygon
         }
     };
     fetch(url, {
@@ -118,6 +145,7 @@ function findAlternativeRoute(coordsToAvoid) {
     .then(data => {
         if (data.routes && data.routes.length > 0) {
             let geojsonData = data.routes[0].geometry;
+    //        console.log(geojsonData);
             updateRoute(geojsonData);
         } else {
             console.error('Ei reittejä löytynyt.');

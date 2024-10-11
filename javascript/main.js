@@ -178,14 +178,12 @@ async function getRoute(startLat, startLng, endLat, endLng) {   // Reitinhakufun
         const data = await response.json();    
             if (data.features && data.features.length > 0) {    // Tarkistetaan, onko palvelimelta vastaanotettu mitään
                 let route = data.features[0];
-                geojsonData = route.geometry;                   // Muuttuja sisältää reitin geometrian, eli koordinaattitiedot
-
+                geojsonData = route.geometry;                   // Muuttuja sisältää reitin geometrian, eli koordinaattitiedot                
                 if (sceneryRouting) {
                     await getApprovedRoutes()
                     await updateRoute(route);
                     geojsonData = route;
                 }
-
                 if (routeVerified.validRoute || !sceneryRouting) {
                     if (currentRouteLayer) {                    // Olemassaoleva karttakerros poistetaan, jos reittiä on jo haettu aiemmin
                         map.removeLayer(currentRouteLayer);

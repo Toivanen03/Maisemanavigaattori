@@ -1,0 +1,26 @@
+<!DOCTYPE html>             <!-- TÄMÄ KARTTA ON VAIN TESTAUSKÄYTTÖÖN EIKÄ KUULU LOPULLISEEN OHJELMAAN -->
+<html>
+<head>
+  <title>Polyline</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/@mapbox/polyline"></script>
+</head>
+<body>
+  <div id="map" style="height: 500px;"></div>
+  <script>
+
+    const polylineString = 'cpntJqau}CQcFQq@U[e@KQBOJIXAZEh@AdAB|@B|@BdAu@R';
+    const decodedCoordinates = polyline.decode(polylineString);
+    const coordinates = decodedCoordinates.map(coord => [coord[0], coord[1]]);
+    const map = L.map('map').setView(coordinates[0], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    L.polyline(coordinates, { color: 'red' }).addTo(map);
+  </script>
+</body>
+</html>
+
