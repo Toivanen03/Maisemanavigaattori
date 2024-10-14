@@ -17,12 +17,7 @@
     
 
 </head>
-<body>
-  
-  
-    
-    <img id="settings-icon" class="animate-image" src="images/settings.png" alt="settings-icon" >
- 
+<body> 
     <nav id="nav-panel" class="nav-panel">
         <h3>Maisemanavigaattori</h3>
     </nav>
@@ -47,8 +42,15 @@
                 <div id="search-route"><img src="images/search.png" alt="search"></div>
                 <div id="fullscreen-toggle"><img src="images/full.png" alt="fullscreen"></div>
                 <div class="current-location"><img id="findMyLocation" src="images/location.png" alt="current-location-icon" onclick="handlePermission(true)"></div>
-
             </div>
+
+            <div class="side-menu-left">
+                <div id="toggle-info"><img src="images/info.png" alt="info"></div>
+                <div id="search-route"><img src="images/search.png" alt="search"></div>
+                <div id="fullscreen-toggle"><img src="images/full.png" alt="fullscreen"></div>
+                <div class="current-location"><img id="findMyLocation" src="images/location.png" alt="current-location-icon" onclick="handlePermission(true)"></div>
+            </div>
+
 
             <div class="search" style="display: none;">
                 <div class="search-top"><h4>Reittivalinnat</h4> <p id="removeRoutes">Tyhjennä</p>
@@ -77,6 +79,8 @@
                     <span class="switchText hide" id="switch-text">Käytössä</span>
                 </div>
             </div>
+
+
             <script type="module" src="javascript/main.js"></script>
         
 

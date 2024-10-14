@@ -86,33 +86,11 @@ document.addEventListener('click', function(event) {
 
 
 
-
-// Valikko asetuksille
-document.getElementById('settings-icon').addEventListener('click', function(event) {
-    event.stopPropagation();
-    const panel = document.getElementById('nav-panel');
-    panel.classList.toggle('show');
-});
-
-document.addEventListener('click', function(event) {
-    const panel = document.getElementById('nav-panel');
-    const icon = document.getElementById('settings-icon');
-    const maisema = document.getElementById('maisema-switch');
-
-    if (!panel.contains(event.target) && !icon.contains(event.target)) {
-        panel.classList.remove('show');
-        maisema.classList.add('hide');
-    }
-});
-
-
 // Maisemareitille valinta
 
 const infoBox = document.getElementById('info');
 const maisemaSwitch = document.getElementById('maisema-switch');
 const switchText = document.getElementById('switch-text');
-const navPanel = document.getElementById('nav-panel');
-const settingsIcon = document.getElementById('settings-icon');
 
 // Asetukset piiloon
 function closeAllSettings() {
@@ -158,19 +136,6 @@ document.getElementById('maisema-checkbox').addEventListener('change', function(
     }
 });
 
-// Suljetaan asetuksia
-document.addEventListener('click', function(event) {
-    if (!navPanel.contains(event.target) && !settingsIcon.contains(event.target)) {
-        closeAllSettings();
-    }
-});
-
-
-settingsIcon.addEventListener('click', function() {
-    closeAllSettings();
-});
-
-
 
 // Piilotetaan hakukentät kun aloitetaan navigointi 
 
@@ -203,7 +168,7 @@ document.getElementById('fullscreen-toggle').addEventListener('click', function(
     }
 });
 
-
+const searchDiv = document.querySelector('.search');
 // Estetään mapin klikkaus sivuvalikossa
 document.querySelector('.side-menu-left').addEventListener('click', function(event) {
     event.stopPropagation();
@@ -216,12 +181,19 @@ document.querySelector('.search').addEventListener('click', function(event) {
 
 // Reittihakua uusiksi
 document.getElementById('search-route').addEventListener('click', function() {
-    const searchDiv = document.querySelector('.search');
+   
     if (searchDiv.style.display === 'none' || searchDiv.style.display === '') {
         searchDiv.style.display = 'block';
     } else {
         searchDiv.style.display = 'none';
     }
 });
+
+// Suljetaan reittihaku kun osoitteet on syötetty
+document.getElementById('findRoute').addEventListener('click', function() {
+    searchDiv.style.display = 'none';
+});
+
+
 
 
