@@ -404,15 +404,10 @@ input:checked + .slider:before {
 @media (max-width: 600px) {
 
    
-    #settings-icon {
-        position: absolute;
-        top: 30px;
-        right: 20px;
-        width: 30px;
-        display: block;
-        z-index: 1005;
+    #map-container{
+        height: 90vh;
     }
-    
+        
     .side-menu-left {
         position: absolute;
         left: 0;
