@@ -191,9 +191,13 @@ document.getElementById('search-route').addEventListener('click', function() {
 
 // Suljetaan reittihaku kun osoitteet on syötetty
 document.getElementById('findRoute').addEventListener('click', function() {
-    searchDiv.style.display = 'none';
-});
+    const startPoint = document.getElementById('startPoint').value.trim();
+    const endPoint = document.getElementById('endPoint').value.trim();
 
+    if (startPoint !== '' && endPoint !== '') {
+        searchDiv.style.display = 'none';
+    }
+});
 
 
 
