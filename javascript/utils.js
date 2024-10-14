@@ -90,12 +90,12 @@ document.addEventListener('click', function(event) {
 // Valikko asetuksille
 document.getElementById('settings-icon').addEventListener('click', function(event) {
     event.stopPropagation();
-    const panel = document.getElementById('settings-panel');
+    const panel = document.getElementById('nav-panel');
     panel.classList.toggle('show');
 });
 
 document.addEventListener('click', function(event) {
-    const panel = document.getElementById('settings-panel');
+    const panel = document.getElementById('nav-panel');
     const icon = document.getElementById('settings-icon');
     const maisema = document.getElementById('maisema-switch');
 
@@ -111,8 +111,7 @@ document.addEventListener('click', function(event) {
 const infoBox = document.getElementById('info');
 const maisemaSwitch = document.getElementById('maisema-switch');
 const switchText = document.getElementById('switch-text');
-const notification = document.querySelector('.notification');
-const settingsPanel = document.getElementById('settings-panel');
+const navPanel = document.getElementById('nav-panel');
 const settingsIcon = document.getElementById('settings-icon');
 
 // Asetukset piiloon
@@ -149,19 +148,19 @@ document.getElementById('toggle-maisema').addEventListener('click', function(eve
 document.getElementById('maisema-checkbox').addEventListener('change', function() {
     if (this.checked) {
         switchText.textContent = "Käytössä";
-        notification.classList.remove('hide');
+      
         console.log('Maisemareitti käytössä');
         console.log('Maisemareitti?');
     } else {
         switchText.textContent = "Ei käytössä";
-        notification.classList.add('hide');
+     
         console.log('Maisemareitti ei käytössä');
     }
 });
 
 // Suljetaan asetuksia
 document.addEventListener('click', function(event) {
-    if (!settingsPanel.contains(event.target) && !settingsIcon.contains(event.target)) {
+    if (!navPanel.contains(event.target) && !settingsIcon.contains(event.target)) {
         closeAllSettings();
     }
 });
@@ -205,5 +204,24 @@ document.getElementById('fullscreen-toggle').addEventListener('click', function(
 });
 
 
+// Estetään mapin klikkaus sivuvalikossa
+document.querySelector('.side-menu-left').addEventListener('click', function(event) {
+    event.stopPropagation();
+});
+
+// Sama reitinhakuboxille
+document.querySelector('.search').addEventListener('click', function(event) {
+    event.stopPropagation();
+});
+
+// Reittihakua uusiksi
+document.getElementById('search-route').addEventListener('click', function() {
+    const searchDiv = document.querySelector('.search');
+    if (searchDiv.style.display === 'none' || searchDiv.style.display === '') {
+        searchDiv.style.display = 'block';
+    } else {
+        searchDiv.style.display = 'none';
+    }
+});
 
 
