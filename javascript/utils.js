@@ -6,10 +6,6 @@ const endPointInput = document.getElementById('endPoint');
 const startSuggestionsList = document.getElementById('startSuggestionsList');
 const endSuggestionsList = document.getElementById('endSuggestionsList');
 
-export function setSceneryRouting(value) {
-    updateSceneryRouting(value);
-}
-
 // Haetaan herestä osoitteet
 function fetchSuggestions(query, suggestionsList) {
     const url = `https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(query)}&in=countryCode:FIN&apiKey=${apiKeyHERE}`;
