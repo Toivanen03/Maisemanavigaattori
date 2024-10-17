@@ -10,7 +10,7 @@
   <div id="map" style="height: 500px;"></div>
   <script>
 
-    const polylineString = 'ysvtJcv}}CPZ\j@x@cDp@mCBFT`@BDT^nAaFQOaAyBK_AA_@?KCa@OSQBK^e@pB{BdGg@rAKZ}BfGmBhFiCbH?j@fA|Bn@`@h@@pCi@v@CxAPdBz@pBnBxApBl@f@~HnOjAbCzA~CtDrIj]`y@rB~EfAhCbCxFb@fAPb@jAjCxGtNhDrGpEhIrBfDjBxC`DvErMvPhIzIjJ`I~AnAvA~@rDlBpCjAnE|AtCj@PB|D^xCNhDCdCMrNyAzFe@pBMfCC|ATbDh@~@^|@n@nAvAt@rAhC`HZd@l@TnB@HlD`@pIFj@TfA|AW?mAC_ACiAI{CAo@EgAC_AC_AoAZ';
+    const polylineString = 'y}ntJop_~CeCbFw@{Bg@gA_DwDCa@CSSkCMEs@EYBUTSj@IZO|AAt@qC|SyBvOmC`OaBrIwA|Ic@xCW`Be@tBGhA@d@qAdL_AdIC^}CgCyGgFcAjIm@dFMfA]nC`BpAOvA';
     const decodedCoordinates = polyline.decode(polylineString);
     const coordinates = decodedCoordinates.map(coord => [coord[0], coord[1]]);
     const map = L.map('map').setView(coordinates[0], 13);

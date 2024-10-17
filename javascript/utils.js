@@ -1,6 +1,7 @@
 // Pyykkönen
 // Osoitteiden autom.ehdotus
 import {apiKeyHERE} from "./config.js";
+import { checkAddress } from "./main.js";
 const startPointInput = document.getElementById('startPoint');
 const endPointInput = document.getElementById('endPoint');
 const startSuggestionsList = document.getElementById('startSuggestionsList');
@@ -28,8 +29,9 @@ startPointInput.addEventListener('input', function() {
     const query = startPointInput.value;
     if (query.length > 2) {
         fetchSuggestions(query, startSuggestionsList);
+        startSuggestionsList.style.display = 'block';
     } else {
-        startSuggestionsList.innerHTML = '';
+        startSuggestionsList.style.display = 'none';
     }
 });
 // Määränpää
@@ -37,9 +39,24 @@ endPointInput.addEventListener('input', function() {
     const query = endPointInput.value;
     if (query.length > 2) {
         fetchSuggestions(query, endSuggestionsList);
+        endSuggestionsList.style.display = 'block';
     } else {
-           endSuggestionsList.innerHTML = '';
+        endSuggestionsList.style.display = 'none';
     }
+});
+
+
+
+startPointInput.addEventListener('blur', function() {
+    setTimeout(() => {
+        startSuggestionsList.style.display = 'none';
+    }, 500);
+});
+
+endPointInput.addEventListener('blur', function() {
+    setTimeout(() => {
+        endSuggestionsList.style.display = 'none';
+    }, 500);
 });
 
 
@@ -58,17 +75,22 @@ function displaySuggestions(suggestions, suggestionsList) {
         li.textContent = suggestion.address.label;
 
         li.addEventListener('click', function() {
+
+            const selectedAddress = suggestion.address.label;
             suggestionsList.innerHTML = '';
             if (suggestionsList === startSuggestionsList) {
-                startPointInput.value = suggestion.address.label;
+                startPointInput.value = selectedAddress;
+                checkAddress('start');
             } else {
-                endPointInput.value = suggestion.address.label;
+                endPointInput.value = selectedAddress;
+                checkAddress('end');
             }
         });
 
         suggestionsList.appendChild(li);
     });
 }
+
 
 // Klikkaamalla muualle osoite-ehdotus poistuu
 document.addEventListener('click', function(event) {

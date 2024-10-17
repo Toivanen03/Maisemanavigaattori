@@ -30,6 +30,11 @@ body{
 }
 
 
+li:hover {
+    cursor: pointer;
+}
+
+
 .side-menu-left {
     position: relative;
     height: 100vh;

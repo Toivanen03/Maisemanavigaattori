@@ -1,15 +1,14 @@
 import { apiKey } from './config.js';
 import { geojsonData } from './main.js';    // Haetut reittikoordinaatit
-import { routeVerified } from './main.js';  // Olio sisältää tiedon, onko reitti hyväksytty
-import { setShortRoute, getShortRoute } from './main.js';
+import { setRouteVerified, getRouteVerified } from './main.js';  // Olio sisältää tiedon, onko reitti hyväksytty
 
 let filteredWays;                           // Sallitut reittikoordinaatit
 let routeHandled;                           // Varalla, saatetaan tarvita jatkossa
 let newRoute;                               // Uuden reitin muuttuja
 let originalRoute;                          // Tallennetaan alkuperäinen reitti lyhyen haun palauttamiseksi
 
-export function updateShortRoute(value) {   // Päivittää shortRoute-muuttujaa main.js -tiedostossa
-    setShortRoute(value);
+export function updateRouteVerified(value) {   // Päivittää routeVerified-muuttujaa main.js -tiedostossa
+    setRouteVerified(value);
 }
 
 export async function getApprovedRoutes() { // Haetaan Overpass Turbolla luotu JSON-data sallituista teistä (pienet tiet ja kadut Heinolan keskustan alueella, suodatus ei vielä toiminnassa)
@@ -45,7 +44,7 @@ async function verifyRoutes() {                                     // Koordinaa
     }
 
     if (routeCoords.length <= 10) {                                 // Jos haettava reitti on lyhyt, uutta hakua ei suoriteta, vaan palautetaan alkuperäinen
-        setShortRoute(true);
+        setRouteVerified(true);
         console.log('Ei muutoksia, lyhyt reitti');
         return originalRoute;
     }
@@ -53,18 +52,18 @@ async function verifyRoutes() {                                     // Koordinaa
     if (filteredWays) {                                             // Sallitut reitit heinola.json -tiedostosta puretaan koordinaateiksi
         filteredWays.forEach((way) => {
             way.geometry.forEach((coordinate) => {
-                filteredWaysCoords.push([coordinate.lon, coordinate.lat]);              
+                filteredWaysCoords.push([coordinate.lat, coordinate.lon]);              
             });
         });
     }
 
-    function compareCoords(coord1, coord2) {                        // Vertaillaan kolmea ensimmäistä desimaalia,
-        let lon1 = coord1[0].toFixed(3);                            // mutta koordinaatit kuitenkin tallennetaan täydellä tarkkuudella
-        let lat1 = coord1[1].toFixed(3);
-        let lon2 = coord2[0].toFixed(3);
-        let lat2 = coord2[1].toFixed(3);
-        return lon1 === lon2 && lat1 === lat2;
-    }
+        function compareCoords(coord1, coord2) {                        // Vertaillaan kolmea ensimmäistä desimaalia,
+            let lon1 = coord1[0].toFixed(3);                            // mutta koordinaatit kuitenkin tallennetaan täydellä tarkkuudella
+            let lat1 = coord1[1].toFixed(3);
+            let lon2 = coord2[0].toFixed(3);
+            let lat2 = coord2[1].toFixed(3);
+            return lon1 === lon2 && lat1 === lat2;
+        }
 
     let validCoords = routeCoords.filter(coord1 =>
         filteredWaysCoords.some(coord2 => compareCoords(coord1, coord2))                        // Muunnettujen koordinaattien vertailu
@@ -74,25 +73,28 @@ async function verifyRoutes() {                                     // Koordinaa
     );
     if (coordsToAvoid.length >= 10) {
         coordsToAvoid = coordsToAvoid.slice(2, -2);                                             // Poistetaan alusta ja lopusta koordinaatteja (varmistaa liikkeellepääsyn esim. parkkipaikalta)
-    };
-    if (validCoords.length > 0 && validCoords.length >= (routeCoords.length * 0.8 && !getShortRoute())) {   // Jos haettuja koordinaatteja on tarpeeksi, kutsutaan funktiota arvolla true
+    };    
+    if (validCoords.length > 0 && validCoords.length >= (routeCoords.length * 0.8 && !getRouteVerified())) {   // Jos haettuja koordinaatteja on tarpeeksi, kutsutaan funktiota arvolla true
         await updateRouteState(true, validCoords, routeCoords);
-    } else {                                                                                    // Muutoin käsitellään falsena ja funktiokutsussa
-        await updateRouteState(false, validCoords, coordsToAvoid);                              // välitetään vältettävät koordinaatit
+    } else {                                                                                                // Muutoin käsitellään falsena ja funktiokutsussa
+        await updateRouteState(false, validCoords, coordsToAvoid);                                          // välitetään vältettävät koordinaatit
     };
 }
 
 
 
 
-async function updateRouteState(value, validCoords, routeCoords) { // "Välifunktio", joka käsittelee toimet sen mukaan, onko reitti kriteerit täyttävä
-    routeVerified.validRoute = value;                              // Asetetaan vastaanotetun parametrin mukaisesti true tai false
-    if (routeVerified.validRoute) {
+export async function updateRouteState(value, validCoords, routeCoords) { // "Välifunktio", joka käsittelee toimet sen mukaan, onko reitti kriteerit täyttävä
+    setRouteVerified(value);                              // Asetetaan vastaanotetun parametrin mukaisesti true tai false
+    if (getRouteVerified()) {
+        routeHandled = true;
         console.log('Reitti kelpaa, valideja ', validCoords.length, ' ja pisteitä ', routeCoords.length);
+        return originalRoute;
     } else {
+        if (!routeHandled) {
         console.log('Haetaan uutta reittiä, kelpoja koordinaatteja ', validCoords.length, ' ja pisteitä ', routeCoords.length);
-        
         await handleNewRoute(routeCoords);      // Jos updateRouteState on kutsuttu falsella, routeCoords sisältää epäkelvot koordinaatit
+        }
     }
 }
 
