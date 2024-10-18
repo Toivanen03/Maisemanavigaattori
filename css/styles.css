@@ -201,13 +201,14 @@ button:hover {
     color: white;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.39);
     z-index: 1008;
-    padding: 5px 5px 0px 20px;
     display: flex;
     justify-content: center;
     gap: 20px;
     font-weight: bold;
     font-family: "Days One", sans-serif;
     justify-content: center;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 #username-display {
@@ -469,8 +470,8 @@ input:checked + .slider:before {
     }
 
     .search {
-        width: 200px;
-        top: 45%;
+        width: 250px;
+        top: 40%;
         transform: translateY(100%);
         opacity: 0;
         animation: slideInFromBottom 0.5s forwards ease-out;
@@ -481,14 +482,15 @@ input:checked + .slider:before {
 
     .leaflet-bottom{
         position: absolute;
-        top: 10px;
+        top: -20px;
         left: 0;
         width: 200px;
+     
+      
     }
 
     #username-display{
         position:static;
-        margin-left: -10px;
     }   
 
 
