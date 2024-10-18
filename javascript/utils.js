@@ -1,7 +1,7 @@
 // Pyykkönen
 // Osoitteiden autom.ehdotus
 import {apiKeyHERE} from "./config.js";
-import { checkAddress } from "./main.js";
+import { checkAddress, setSceneryRouting } from "./main.js";
 const startPointInput = document.getElementById('startPoint');
 const endPointInput = document.getElementById('endPoint');
 const startSuggestionsList = document.getElementById('startSuggestionsList');
@@ -144,13 +144,10 @@ document.getElementById('toggle-maisema').addEventListener('click', function(eve
 document.getElementById('maisema-checkbox').addEventListener('change', function() {
     if (this.checked) {
         switchText.textContent = "Käytössä";
-      
-        console.log('Maisemareitti käytössä');
-        console.log('Maisemareitti?');
+        setSceneryRouting(true);
     } else {
         switchText.textContent = "Ei käytössä";
-     
-        console.log('Maisemareitti ei käytössä');
+        setSceneryRouting(false);
     }
 });
 

@@ -1,3 +1,50 @@
+/*try {
+    const response = await fetch('mapdata/heinola.json');
+    const data = await response.json();
+    
+    if (!data.elements || !Array.isArray(data.elements)) {
+        throw new Error('Data.elements ei ole taulukko');
+    }
+
+    // Alustetaan muuttujat uloimmille rajoille
+    let minLat = Infinity;
+    let maxLat = -Infinity;
+    let minLng = Infinity;
+    let maxLng = -Infinity;
+
+    // Käydään läpi kaikki elementit
+    data.elements.forEach(element => {
+        if (element.geometry && Array.isArray(element.geometry)) {
+            element.geometry.forEach(coord => {
+                // Muutetaan avain 'lon' -> 'lng'
+                const lat = coord.lat;
+                const lng = coord.lon; // Vaihda 'lng' -> 'lon'
+
+                if (typeof lat === 'number' && typeof lng === 'number') {
+                    if (lat < minLat) minLat = lat;
+                    if (lat > maxLat) maxLat = lat;
+                    if (lng < minLng) minLng = lng;
+                    if (lng > maxLng) maxLng = lng;
+                } else {
+                    console.warn('Koordinaatti ei ole numeerinen:', coord);
+                }
+            });
+        }
+    });
+
+    if (minLat === Infinity || maxLat === -Infinity || minLng === Infinity || maxLng === -Infinity) {
+        console.warn('Koordinaatteja ei löytynyt.');
+    } else {
+        console.log(`Uloimmat rajat: 
+        Lat: [${minLat}, ${maxLat}], 
+        Lng: [${minLng}, ${maxLng}]`);
+    }
+} 
+catch (err) {
+    console.error('Virhe ladattaessa JSON-tiedostoa:', err);
+}*/
+
+
 let map;                                                                    // Alustetaan muuttujat:    - Karttapohja
 let currentRouteLayer = null;                                               //                          - Reittikerros
 let startMarker, endMarker;                                                 //                          - Alku- ja loppumerkit
@@ -29,6 +76,9 @@ export function setRouteVerified(value) {                                      /
 }
 export function getRouteVerified() {
     return routeVerified;
+}
+export function setSceneryRouting(value) {
+    sceneryRouting = value;
 }
 
 
@@ -64,27 +114,30 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     document.getElementById('startPoint').addEventListener('focus', () => { // Asetetaan muuttujan arvo valitun osoitekentän mukaan
         map.dragging.disable();
-        currentMarkerType = 'start';                                       
+        currentMarkerType = 'start';
     });
 
     document.getElementById('endPoint').addEventListener('focus', () => {
         map.dragging.disable();
-        currentMarkerType = 'end';
+        currentMarkerType = 'end';        
     });
 
     document.getElementById('startPoint').addEventListener('blur', function() { // Tarkistetaan syöttökentän osoite
-        map.dragging.enable();
-        checkAddress('start');                                              
+        map.dragging.enable();                                                  // Estetään kartan raahautuminen, kun ollaan osoitteen syöttökentässä
+        if (startMarker.getLatLng().lat.toFixed(5) + ',' + startMarker.getLatLng().lng.toFixed(5) !== startCoords.value) {
+            checkAddress('start');      // If-lauseen tarkistus estää markereiden hyppimisen. Tämä välttämätöntä, koska myös pistettä kartalta valitessa
+        }                               // markerin tyyppi valitaan syöttökenttää klikkaamalla. Ilman tarkistusta lähtee tuplakutsu markereiden asettamiselle.
     });
 
     document.getElementById('endPoint').addEventListener('blur', function() {
-        map.dragging.enable();   
+        map.dragging.enable();
         checkAddress('end');
     });
 
-    document.getElementById('findRoute').addEventListener('click', function() { // Reittihakupainikkeen kuuntelu
+    document.getElementById('findRoute').addEventListener('click', function() {         // Reittihakupainikkeen kuuntelu
+        const coords = [startLat, startLng, endLat, endLng].map(coord => Number(coord));// Varmistetaan, että koordinaatit ovat numeerisessa muodossa
         if (startLat && startLng && endLat && endLng) {
-            getRoute(startLat, startLng, endLat, endLng);
+            checkBounds(coords[0], coords[1], coords[2], coords[3]);
         } else {
             alert("Aseta sekä lähtöpiste että määränpää.");
         }
@@ -128,7 +181,7 @@ function handlePermission(reply) {                                              
             function(position) {
                 startLat = position.coords.latitude;
                 startLng = position.coords.longitude;
-                drawMap(startLat, startLng, 20);
+                drawMap(startLat, startLng, 18);
                 const latLngString = `${startLat.toFixed(5)},${startLng.toFixed(5)}`;
                 startCoords.value = latLngString;
                 reverseGeocode(startLat, startLng, function(address) {            // Saatu sijainti geokoodataan käänteisesti ja asetetaan osoite tekstinsyöttökenttään ja markeriin
@@ -160,7 +213,7 @@ function handlePermissionDenied(parameter) {        // Huolehtii viestilaatikon 
 
 function locationError(error) {                 // Funktio määrittelee viestin saamansa parametrin perusteella. Jos todellinen virhe sijaintihaussa tapahtuu,
     let errorMessage;                           // näytetään eri viesti kuin tilanteessa, jossa käyttäjä on estänyt sijainnin jakamisen. Oletusosoitteen haku
-    drawMap(defaultLat, defaultLng, 15);        // ja markerin asettaminen tapahtuvat tässä funktiossa.
+    drawMap(defaultLat, defaultLng, 18);        // ja markerin asettaminen tapahtuvat tässä funktiossa.
     startCoords.value = `${defaultLat}, ${defaultLng}`;
     reverseGeocode(defaultLat, defaultLng, function(address) {
         startAddress.value = "Oletussijainti";
@@ -176,6 +229,45 @@ function locationError(error) {                 // Funktio määrittelee viestin
 
 
 
+function checkBounds(startLat, startLng, endLat, endLng) {  // Funktio tarkistaa, onko haettavan reitin jokin piste heinola.json-tiedoston
+    if (sceneryRouting) {   // koordinaattien ulkopuolella, mikäli maisemareittihaku on käytössä. Jos on, maisemahaku poistetaan
+        let message;        // käytöstä ennen reittihakua ja näytetään viesti. Tällä estetään suodatustoimintojen aiheuttama kuormitus selaimelle
+        let messageEnd = "Heinolan ulkopuolella. Maisemareittihaku on pois käytöstä";
+        const bounds = {
+            minLat: 61.1394963,     // Heinola.json -tiedoston uloimmat koordinaatit
+            maxLat: 61.2798717,
+            minLng: 25.9770522,
+            maxLng: 26.1375315
+        };
+
+        const isStartOutside = isPointOutsideBounds(startLat, startLng, bounds);
+        const isEndOutside = isPointOutsideBounds(endLat, endLng, bounds);
+
+        if (isStartOutside || isEndOutside) {                       // Näytettävä viesti mukautetaan tilanteen mukaan
+            if (isStartOutside && isEndOutside) {
+                message = "Molemmat pisteet ovat " + messageEnd;
+            } else if (isStartOutside) {
+                message = "Lähtöpiste on " + messageEnd;
+            } else if (isEndOutside) {
+                message = "Määränpää on " + messageEnd;
+            }
+            document.getElementById('maisema-checkbox').checked = false;
+            setSceneryRouting(false);
+            alert(message);
+        }
+    }
+
+    getRoute(startLat, startLng, endLat, endLng);
+
+    function isPointOutsideBounds(lat, lng, bounds) {
+        const { minLat, maxLat, minLng, maxLng } = bounds;
+        return lat < minLat || lat > maxLat || lng < minLng || lng > maxLng;
+    }
+}
+
+
+
+
 async function getRoute(startLat, startLng, endLat, endLng) {   // Reitinhakufunktio lähettää hakupyynnön ORS-palvelimelle. Osoitteen muuttujissa on haettavat koordinaatit sekä APIkey. Lisäparametrilla määritetään haettavaksi kolme reittivaihtoehtoa.
     if (sceneryRouting) {
         getApprovedRoutes();                // Puretaan heinola.json-tiedoston sallitut reitit tiedostossa routeFilter
@@ -184,7 +276,6 @@ async function getRoute(startLat, startLng, endLat, endLng) {   // Reitinhakufun
     if (currentRouteLayer) {                // Olemassaoleva karttakerros poistetaan, jos reittiä on jo haettu aiemmin
         map.removeLayer(currentRouteLayer);
     }
-
     const url = `https://api.openrouteservice.org/v2/directions/driving-car?start=${startLng},${startLat}&end=${endLng},${endLat}&api_key=${apiKey}`;    
     try {                                                                       // Haetaan pyydetty data
         const response = await fetch(url);
@@ -210,7 +301,7 @@ async function getRoute(startLat, startLng, endLat, endLng) {   // Reitinhakufun
                     currentRouteLayer = L.geoJSON(geojsonData).addTo(map);          // Asetetaan reittikerros kartalle
                     //calculateDistance();                                          // Laskee reitin pituuden linnuntietä
                     if (geojsonData.coordinates.length > 0) {
-                        map.fitBounds(currentRouteLayer.getBounds(), {padding: [100, 100]});    // Piirtää reitin marginaalin kanssa
+                        map.fitBounds(currentRouteLayer.getBounds(), {padding: [180, 50]});    // Piirtää reitin marginaalin kanssa
                     }
                 }
             }
@@ -393,7 +484,7 @@ function drawMap(lat, lng, zoomLevel) {                                     // K
 
 
 function placeMarker(addressType, lat, lng) {       // Asettaa markerit kartalle kutsuttaessa, eli sekä osoite kirjoittamalla että kartalta klikkaamalla
-    if (addressType === 'start'){
+    if (addressType === 'start') {
         if (startMarker) {
             startMarker.setLatLng([lat, lng]).update();
         } else {
@@ -407,20 +498,31 @@ function placeMarker(addressType, lat, lng) {       // Asettaa markerit kartalle
         }
     }
     if (startMarker && endMarker) {
+        document.querySelector('.search').style.display = 'block';
         const bounds = L.latLngBounds([startMarker.getLatLng(), endMarker.getLatLng()]);
-        map.fitBounds(bounds, { padding: [50, 50] });
+        map.fitBounds(bounds, { padding: [150, 50] });
     }
 }
 
 
 
 
-function placeAddressOnPopups() {                               // Tuo kutsuttaessa osoitteen markerin popup-ikkunaan
+function placeAddressOnPopups() {
+    let bounds = [];
+
     if (startMarker) {
-        startMarker.bindPopup(`<div style="text-align: center";><b>Lähtöpaikka:</b><br>${startAddress.value}</div>`).openPopup();
+        startMarker.bindPopup(`<div style="text-align: center;"><b>Lähtöpaikka:</b><br>${startAddress.value}</div>`);
+        startMarker.openPopup();
+        bounds.push(startMarker.getLatLng());                   // Tallennetaan markereiden koordinaatit listaan
     }
     if (endMarker) {
-        endMarker.bindPopup(`<div style="text-align: center";><b>Määränpää:</b><br>${endAddress.value}</div>`).openPopup();
+        endMarker.bindPopup(`<div style="text-align: center;"><b>Määränpää:</b><br>${endAddress.value}</div>`);
+        endMarker.openPopup();
+        bounds.push(endMarker.getLatLng());
+    }
+    if (bounds.length === 2) {                                  // Tällä saadaan estettyä kartan "pomppiminen" silloin, kun jompaakumpaa
+        const latLngBounds = L.latLngBounds(bounds);            // markeria ollaan asettamassa toisen markerin näkyvyyden ulkopuolelle.
+        map.fitBounds(latLngBounds, { padding: [180, 50] });    // Kartta panoroituu aina siten, että molemmat markerit näkyvät.
     }
 }
 

@@ -74,7 +74,7 @@ async function verifyRoutes() {                                     // Koordinaa
     if (coordsToAvoid.length >= 10) {
         coordsToAvoid = coordsToAvoid.slice(2, -2);                                             // Poistetaan alusta ja lopusta koordinaatteja (varmistaa liikkeellepääsyn esim. parkkipaikalta)
     };    
-    if (validCoords.length > 0 && validCoords.length >= (routeCoords.length * 0.8 && !getRouteVerified())) {   // Jos haettuja koordinaatteja on tarpeeksi, kutsutaan funktiota arvolla true
+    if (validCoords.length > 0 && validCoords.length >= (routeCoords.length * 0.8)) {   // Jos haettuja koordinaatteja on tarpeeksi, kutsutaan funktiota arvolla true
         await updateRouteState(true, validCoords, routeCoords);
     } else {                                                                                                // Muutoin käsitellään falsena ja funktiokutsussa
         await updateRouteState(false, validCoords, coordsToAvoid);                                          // välitetään vältettävät koordinaatit
@@ -258,8 +258,9 @@ export async function findAlternativeRoute(polygon) {
     if (!routeHandled) {
         let [startLat, startLng] = document.getElementById('startPointCoords').value.split(',').map(part => parseFloat(part.trim()));
         let [endLat, endLng] = document.getElementById('endPointCoords').value.split(',').map(part => parseFloat(part.trim()));
-        let startPoint = [startLng, startLat];      // Valmistellaan lähtö- ja loppupisteiden koordinaatit uutta reittihakua varten
-        let endPoint = [endLng, endLat];
+        let startPoint = [startLat, startLng];
+        let endPoint = [endLat, endLng];
+        // Valmistellaan lähtö- ja loppupisteiden koordinaatit uutta reittihakua varten
 
         const url = 'https://api.openrouteservice.org/v2/directions/driving-car';
         const request = {                           // Asetetaan hakuun alku- ja loppupisteet sekä vältettävä polygoni
