@@ -19,7 +19,8 @@
 </head>
 <body> 
     <nav id="nav-panel" class="nav-panel">
-        <h3>Maisemanavigaattori</h3>
+        <span id="username-display" class="hide">Kirjautuneena: </span>
+        <h3>Maisemanavigaattori</h3>  
     </nav>
 
     
@@ -36,15 +37,29 @@
     <div id="map-container">
         <div id="map">
             <div class="side-menu-left">
+                <div id="login"><img src="images/login.png" alt="login"></div>
                 <div id="toggle-info"><img src="images/info.png" alt="info"></div>
                 <div id="search-route"><img src="images/search.png" alt="search"></div>
                 <div id="fullscreen-toggle"><img src="images/full.png" alt="fullscreen"></div>
                 <div class="current-location"><img id="findMyLocation" src="images/location.png" alt="current-location-icon" onclick="handlePermission(true)"></div>
             </div>
 
-            <div class="search" style="display: none;">
-                <div class="search-top"><h4>Reittivalinnat</h4> <p id="removeRoutes">Tyhjennä</p>
-                    </div>
+            <div id="login-form" class="hide">
+                <form id="login-form-element">
+                    <h4>Kirjaudu</h4>
+                    <label for="username">Tunnus:</label>
+                    <input type="text" id="username" name="username" placeholder="Admin" required>
+                    <label for="password">Salasana:</label>
+                    <input type="password" id="password" name="password" placeholder="pass" required>
+                    <button type="submit">Kirjaudu</button>
+                </form>
+            </div>
+
+            <div class="search">
+                <div class="search-top">
+                 <h5> Reittivalinnat</h5>
+                <p id="removeRoutes">Tyhjennä</p>
+                </div>
                 <div>
                     <label for="startPoint">Lähtöpiste:</label>
                     <input type="text" id="startPoint" placeholder="Anna lähtöpiste">

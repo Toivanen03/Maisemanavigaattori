@@ -28,23 +28,21 @@ function fetchSuggestions(query, suggestionsList) {
 
 // Ehdotukset tulee näkyviin mikäli syötetään enemmän kuin 2 kirjainta
 // Lähtöpiste
-startPointInput.addEventListener('input', function() {
-    const query = startPointInput.value;
-    if (query.length > 2) {
-        fetchSuggestions(query, startSuggestionsList);
-    } else {
-        startSuggestionsList.innerHTML = '';
-    }
-});
+handleInput(startPointInput, startSuggestionsList);
 // Määränpää
-endPointInput.addEventListener('input', function() {
-    const query = endPointInput.value;
-    if (query.length > 2) {
-        fetchSuggestions(query, endSuggestionsList);
-    } else {
-           endSuggestionsList.innerHTML = '';
-    }
-});
+handleInput(endPointInput, endSuggestionsList);
+
+
+function handleInput(inputElement, suggestionsList) {
+    inputElement.addEventListener('input', function() {
+        const query = inputElement.value;
+        if (query.length > 2) {
+            fetchSuggestions(query, suggestionsList);
+        } else {
+            suggestionsList.innerHTML = '';
+        }
+    });
+}
 
 
 
@@ -60,7 +58,6 @@ function displaySuggestions(suggestions, suggestionsList) {
         const li = document.createElement('li');
         li.className = 'list-group-item';
         li.textContent = suggestion.address.label;
-
         li.addEventListener('click', function() {
             suggestionsList.innerHTML = '';
             if (suggestionsList === startSuggestionsList) {
@@ -86,19 +83,30 @@ document.addEventListener('click', function(event) {
 
 
 
-// Maisemareitille valinta
-
+// Valikot piiloon
 const infoBox = document.getElementById('info');
 const maisemaSwitch = document.getElementById('maisema-switch');
 const switchText = document.getElementById('switch-text');
+const sideMenu = document.querySelector('.side-menu-left');
 
-// Asetukset piiloon
+
 function closeAllSettings() {
     infoBox.classList.add('hide');
     maisemaSwitch.classList.add('hide');
     switchText.classList.add('hide');
+  
 }
 
+window.addEventListener('click', function(event) {
+    if (!sideMenu.contains(event.target)) {
+        closeAllSettings();
+    }
+
+    
+});
+
+/*
+Poissa käytöstä kunnes saan toimimaan
 // Infoa
 document.getElementById('toggle-info').addEventListener('click', function(event) {
     if (!infoBox.classList.contains('hide')) {
@@ -109,6 +117,9 @@ document.getElementById('toggle-info').addEventListener('click', function(event)
     }
     event.stopPropagation();
 });
+
+*/
+
 
 // Maisemareitti-kytkintä
 document.getElementById('toggle-maisema').addEventListener('click', function(event) {
@@ -122,40 +133,24 @@ document.getElementById('toggle-maisema').addEventListener('click', function(eve
     event.stopPropagation();
 });
 
-
+// Maisemareitti-kytkintä
 document.getElementById('maisema-checkbox').addEventListener('change', function() {
     if (this.checked) {
         switchText.textContent = "Käytössä";
-      
         console.log('Maisemareitti käytössä');
-        console.log('Maisemareitti?');
+        setTimeout(function() {
+            closeAllSettings();
+        }, 2000);
     } else {
         switchText.textContent = "Ei käytössä";
-     
         console.log('Maisemareitti ei käytössä');
+        setTimeout(function() {
+            closeAllSettings();
+        }, 2000);
     }
-});
 
-
-// Piilotetaan hakukentät kun aloitetaan navigointi 
-
-const startPointDiv = document.getElementById('startPoint').parentElement;
-const endPointDiv = document.getElementById('endPoint').parentElement;
-const findRouteButton = document.getElementById('findRoute');
-
-document.getElementById('navigateRoute').addEventListener('click', function() {
-    if (startPointDiv.style.display === 'none') {
-        startPointDiv.style.display = 'block';
-        endPointDiv.style.display = 'block';
-        findRouteButton.style.display = 'block';
-    } else {
-        startPointDiv.style.display = 'none';
-        endPointDiv.style.display = 'none';
-        findRouteButton.style.display = 'none';
-    }
     
 });
-
 
 
 
@@ -168,15 +163,19 @@ document.getElementById('fullscreen-toggle').addEventListener('click', function(
     }
 });
 
-const searchDiv = document.querySelector('.search');
+
 // Estetään mapin klikkaus sivuvalikossa
+const searchDiv = document.querySelector('.search');
+
 document.querySelector('.side-menu-left').addEventListener('click', function(event) {
     event.stopPropagation();
+
 });
 
 // Sama reitinhakuboxille
 document.querySelector('.search').addEventListener('click', function(event) {
     event.stopPropagation();
+    
 });
 
 // Reittihakua uusiksi
@@ -198,6 +197,55 @@ document.getElementById('findRoute').addEventListener('click', function() {
         searchDiv.style.display = 'none';
     }
 });
+
+
+// Tunnus ja salasana (prototyyppi)
+const correctUsername = 'admin';
+const correctPassword = 'pass';
+const loginForm = document.getElementById('login-form');
+const loginFormElement = document.getElementById('login-form-element');
+const usernameDisplay = document.getElementById('username-display');
+const loginDiv = document.getElementById('login');
+const loginImage = loginDiv.querySelector('img');
+const loginButton = document.getElementById('login');
+
+loginButton.addEventListener('click', function() {
+    document.getElementById('login-form').classList.toggle('hide');
+});
+
+
+// Kirjautuminen
+loginFormElement.addEventListener('submit', function(event) {
+    event.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    console.log(`Username: ${username}, Password: ${password}`);
+
+    if (username === correctUsername && password === correctPassword) {
+        loginForm.classList.add('hide');
+        usernameDisplay.textContent = `Kirjautuneena: ${username}`;
+        usernameDisplay.classList.remove('hide');
+        loginImage.src = 'images/logout.png';
+        loginImage.alt = 'logout';
+        loginButton.classList.add('hide');
+        loginFormElement.reset();
+    } else {
+        alert('Virheellinen tunnus tai salasana!');
+    }
+});
+
+// Kirjaudu ulos
+loginImage.addEventListener('click', function() {
+    if (loginImage.alt === 'logout') {
+        usernameDisplay.classList.add('hide');
+        loginImage.src = 'images/login.png';
+        loginImage.alt = 'login';
+        loginForm.classList.remove('hide');
+        console.log('Logout klikattu');
+    }
+});
+
 
 
 

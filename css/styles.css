@@ -68,13 +68,10 @@ body{
 }
 
 .search {
-    width: 300px;
     max-width: 100%;
-    height: auto;
     position: absolute; 
     top: 30%;
     left: 90px;
-    transform: translate(-50%, -50%);
     z-index: 1000;
     background-color: rgba(255, 255, 255);
     padding: 10px;
@@ -82,8 +79,38 @@ body{
     box-shadow: 0 0 10px rgba(0,0,0,0.8);
     cursor: auto;
     font-family: "Days One", sans-serif;
-    transform: translateX(-100%);
     animation: slideInFromLeft 0.5s forwards ease-out;
+}
+
+.search:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 40px;
+    background-color: black;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+.search div {
+    margin-bottom: 15px;
+}
+
+.search-top {
+    color: white;
+    position: relative;
+    height: auto;
+}
+
+.search-top h5 {
+    display: inline;
+    margin-bottom: 5px;
+}
+#removeRoutes {
+    margin-right: -15px;
+    margin-top: -20px;
 }
 
 @keyframes slideInFromLeft {
@@ -97,21 +124,6 @@ body{
     }
 }
 
-.search-top{
-    width: calc(100% + 20px);
-    margin: -10px -10px 10px -10px;
-    margin-bottom: 10px;
-    color: white;
-    background-color: #2C2C2C;
-    padding: 5px 10px;
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
-
-}
-
-.search div {
-    margin-bottom: 15px;
-}
 
 label {
     display: block;
@@ -119,7 +131,7 @@ label {
     color: #555;
 }
 
-input[type="text"] {
+input[type="text"],input[type="password"] {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
@@ -180,11 +192,10 @@ button:hover {
     top: 0;
     height: auto;
     width: 100%;
-    background-color:rgba(0, 0, 0, 0.9);
+    background-color:black;
     border: 1px solid #0a0a0a;
     color: white;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.39);
-    transition: top 0.5s ease;
     z-index: 1008;
     padding: 5px 5px 0px 20px;
     display: flex;
@@ -192,20 +203,15 @@ button:hover {
     gap: 20px;
     font-weight: bold;
     font-family: "Days One", sans-serif;
-    cursor: auto;
+    justify-content: center;
 }
 
-.nav-panel p:hover {
-    color: #555;
-    cursor: pointer;
+#username-display {
+    position: absolute;
+    left: 20px;
+    font-weight: lighter;
+    font-size: x-small;
 }
-
-
-.nav-panel.show {
-    top: 0;
-}
-
-
 
 .leaflet-top {
     position: absolute;
@@ -314,9 +320,23 @@ input:checked + .slider:before {
     display: none;
 }
 
-
-
-
+#login-form{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin-top: 10px;
+    background-color: #f4f4f4;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 300px;
+    max-width: 100%;
+    height: auto;
+    z-index: 1999;
+    font-family: "Days One", sans-serif;
+    text-align: center;
+}
 
 
 .locationQueryBox {                         /* Sijaintilupalaatikko */
@@ -405,13 +425,13 @@ input:checked + .slider:before {
 
    
     #map-container{
-        height: 90vh;
+        height: 95vh;
     }
         
     .side-menu-left {
         position: absolute;
         left: 0;
-        bottom: 0;
+        bottom: 70px;
         width: 75px;
         height: 350px;
         display: flex;
@@ -421,13 +441,13 @@ input:checked + .slider:before {
     }
 
     .side-menu-left-div {
-        width: 60px;
-        height: 60px;
+        width: 50px;
+        height: 50px;
         
     }
 
     .side-menu-left img {
-        width: 50px;
+        width: 40px;
         
     }
     
@@ -443,7 +463,8 @@ input:checked + .slider:before {
     }
 
     .search {
-        top: 55%;
+        width: 200px;
+        top: 45%;
         transform: translateY(100%);
         opacity: 0;
         animation: slideInFromBottom 0.5s forwards ease-out;
@@ -451,13 +472,18 @@ input:checked + .slider:before {
         margin: 0;
     }
 
+
     .leaflet-bottom{
         position: absolute;
-        top: 20px;
+        top: 10px;
         left: 0;
         width: 200px;
     }
-   
+
+    #username-display{
+        position:static;
+        margin-left: -10px;
+    }   
 
 
 
