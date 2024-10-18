@@ -1,14 +1,11 @@
 // Pyykkönen
 // Osoitteiden autom.ehdotus
 import {apiKeyHERE} from "./config.js";
+import { checkAddress, setSceneryRouting } from "./main.js";
 const startPointInput = document.getElementById('startPoint');
 const endPointInput = document.getElementById('endPoint');
 const startSuggestionsList = document.getElementById('startSuggestionsList');
 const endSuggestionsList = document.getElementById('endSuggestionsList');
-
-export function setSceneryRouting(value) {
-    updateSceneryRouting(value);
-}
 
 // Haetaan herestä osoitteet
 function fetchSuggestions(query, suggestionsList) {
@@ -28,21 +25,23 @@ function fetchSuggestions(query, suggestionsList) {
 
 // Ehdotukset tulee näkyviin mikäli syötetään enemmän kuin 2 kirjainta
 // Lähtöpiste
-handleInput(startPointInput, startSuggestionsList);
+startPointInput.addEventListener('input', function() {
+    const query = startPointInput.value;
+    if (query.length > 2) {
+        fetchSuggestions(query, startSuggestionsList);
+    } else {
+        startSuggestionsList.innerHTML = '';
+    }
+});
 // Määränpää
-handleInput(endPointInput, endSuggestionsList);
-
-
-function handleInput(inputElement, suggestionsList) {
-    inputElement.addEventListener('input', function() {
-        const query = inputElement.value;
-        if (query.length > 2) {
-            fetchSuggestions(query, suggestionsList);
-        } else {
-            suggestionsList.innerHTML = '';
-        }
-    });
-}
+endPointInput.addEventListener('input', function() {
+    const query = endPointInput.value;
+    if (query.length > 2) {
+        fetchSuggestions(query, endSuggestionsList);
+    } else {
+           endSuggestionsList.innerHTML = '';
+    }
+});
 
 
 
@@ -59,17 +58,22 @@ function displaySuggestions(suggestions, suggestionsList) {
         li.className = 'list-group-item';
         li.textContent = suggestion.address.label;
         li.addEventListener('click', function() {
+
+            const selectedAddress = suggestion.address.label;
             suggestionsList.innerHTML = '';
             if (suggestionsList === startSuggestionsList) {
-                startPointInput.value = suggestion.address.label;
+                startPointInput.value = selectedAddress;
+                checkAddress('start');
             } else {
-                endPointInput.value = suggestion.address.label;
+                endPointInput.value = selectedAddress;
+                checkAddress('end');
             }
         });
 
         suggestionsList.appendChild(li);
     });
 }
+
 
 // Klikkaamalla muualle osoite-ehdotus poistuu
 document.addEventListener('click', function(event) {
@@ -137,16 +141,32 @@ document.getElementById('toggle-maisema').addEventListener('click', function(eve
 document.getElementById('maisema-checkbox').addEventListener('change', function() {
     if (this.checked) {
         switchText.textContent = "Käytössä";
+      
         console.log('Maisemareitti käytössä');
-        setTimeout(function() {
-            closeAllSettings();
-        }, 2000);
+        console.log('Maisemareitti?');
     } else {
         switchText.textContent = "Ei käytössä";
+     
         console.log('Maisemareitti ei käytössä');
-        setTimeout(function() {
-            closeAllSettings();
-        }, 2000);
+    }
+});
+
+
+// Piilotetaan hakukentät kun aloitetaan navigointi 
+
+const startPointDiv = document.getElementById('startPoint').parentElement;
+const endPointDiv = document.getElementById('endPoint').parentElement;
+const findRouteButton = document.getElementById('findRoute');
+
+document.getElementById('navigateRoute').addEventListener('click', function() {
+    if (startPointDiv.style.display === 'none') {
+        startPointDiv.style.display = 'block';
+        endPointDiv.style.display = 'block';
+        findRouteButton.style.display = 'block';
+    } else {
+        startPointDiv.style.display = 'none';
+        endPointDiv.style.display = 'none';
+        findRouteButton.style.display = 'none';
     }
 
     

@@ -27,10 +27,13 @@
  
     <div class="video-container hide" id="info">
         <video src="videos/tie.mp4" autoplay loop muted></video>
-        <p class="overlay-text">Verkkoselainpohjainen navigointiohjelma, joka opastaa käyttämään jotain muuta, 
-            kuin nopeinta tai lyhyintä reittiä. Javascriptillä ohjelmoitu koodi pyrkii estämään 
-            reittisuunnittelun moottori- ja maanteitä pitkin, ja opastaa kuljettajan vaihtoehtoisia kiertoteitä 
-            ja pienempien katujen kautta, mikäli vain mahdollista.</p>
+        <p class="overlay-text">Maisemanavigaattori on verkkoselainpohjainen navigointiohjelma, joka opastaa käyttämään jotain muuta, 
+            kuin nopeinta tai lyhyintä reittiä. Reittilaskenta pyrkii estämään 
+            haun moottori- ja maanteitä pitkin, ja opastamaan kuljettajan vaihtoehtoisten kiertoteiden 
+            ja pienempien katujen kautta.<br><br>
+            Voit asettaa alku- ja loppupisteet valitsemalla ensin vastaavan osoitteensyöttökentän ja klikkaamalla karttaa, 
+            tai kirjoittaa osoitteet suoraan kenttiin.
+        </p>
     </div>
     
     
@@ -44,22 +47,9 @@
                 <div class="current-location"><img id="findMyLocation" src="images/location.png" alt="current-location-icon" onclick="handlePermission(true)"></div>
             </div>
 
-            <div id="login-form" class="hide">
-                <form id="login-form-element">
-                    <h4>Kirjaudu</h4>
-                    <label for="username">Tunnus:</label>
-                    <input type="text" id="username" name="username" placeholder="Admin" required>
-                    <label for="password">Salasana:</label>
-                    <input type="password" id="password" name="password" placeholder="pass" required>
-                    <button type="submit">Kirjaudu</button>
-                </form>
-            </div>
-
-            <div class="search">
-                <div class="search-top">
-                 <h5> Reittivalinnat</h5>
-                <p id="removeRoutes">Tyhjennä</p>
-                </div>
+            <div class="search" style="display: none;">
+                <div class="search-top"><h4>Reittivalinnat</h4> <p id="removeRoutes">Tyhjennä</p>
+                    </div>
                 <div>
                     <label for="startPoint">Lähtöpiste:</label>
                     <input type="text" id="startPoint" placeholder="Anna lähtöpiste">
