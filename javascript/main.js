@@ -1,50 +1,3 @@
-/*try {
-    const response = await fetch('mapdata/heinola.json');
-    const data = await response.json();
-    
-    if (!data.elements || !Array.isArray(data.elements)) {
-        throw new Error('Data.elements ei ole taulukko');
-    }
-
-    // Alustetaan muuttujat uloimmille rajoille
-    let minLat = Infinity;
-    let maxLat = -Infinity;
-    let minLng = Infinity;
-    let maxLng = -Infinity;
-
-    // Käydään läpi kaikki elementit
-    data.elements.forEach(element => {
-        if (element.geometry && Array.isArray(element.geometry)) {
-            element.geometry.forEach(coord => {
-                // Muutetaan avain 'lon' -> 'lng'
-                const lat = coord.lat;
-                const lng = coord.lon; // Vaihda 'lng' -> 'lon'
-
-                if (typeof lat === 'number' && typeof lng === 'number') {
-                    if (lat < minLat) minLat = lat;
-                    if (lat > maxLat) maxLat = lat;
-                    if (lng < minLng) minLng = lng;
-                    if (lng > maxLng) maxLng = lng;
-                } else {
-                    console.warn('Koordinaatti ei ole numeerinen:', coord);
-                }
-            });
-        }
-    });
-
-    if (minLat === Infinity || maxLat === -Infinity || minLng === Infinity || maxLng === -Infinity) {
-        console.warn('Koordinaatteja ei löytynyt.');
-    } else {
-        console.log(`Uloimmat rajat: 
-        Lat: [${minLat}, ${maxLat}], 
-        Lng: [${minLng}, ${maxLng}]`);
-    }
-} 
-catch (err) {
-    console.error('Virhe ladattaessa JSON-tiedostoa:', err);
-}*/
-
-
 let map;                                                                    // Alustetaan muuttujat:    - Karttapohja
 let currentRouteLayer = null;                                               //                          - Reittikerros
 let startMarker, endMarker;                                                 //                          - Alku- ja loppumerkit
@@ -54,7 +7,9 @@ let startAddress = document.getElementById('startPoint');                   //  
 let endAddress = document.getElementById('endPoint');
 let startCoords = document.getElementById('startPointCoords');              //                          - Koordinaattikentät
 let endCoords = document.getElementById('endPointCoords');
-let routeVerified = false;
+let verifiedByShortRoute = false;                                           //                          - Alle kymmenen koordinaattipisteen reitti
+let verifiedByCoordinates = false;                                          //                          - Kaikki koordinaatit kelpoja jo ensimmäisellä haulla
+let verifiedByScenery = false;                                              //                          - Suodatettu ja korjattu reitti
 
 const defaultLat = 61.23345;                                                // Oletussijainti (ABC Heinola). Käytetään, mikäli selaimelle ei ole annettu lupaa sijainnin jakamiseen
 const defaultLng = 26.04378;
@@ -66,18 +21,29 @@ let [startLat, startLng] = startCoords.value.split(',').map(coord => parseFloat(
 let [endLat, endLng] = endCoords.value.split(',').map(coord => parseFloat(coord.trim()));
 
 import { apiKey, apiKeyHERE } from './config.js';                           // Ladataan API-avaimet
-import { getApprovedRoutes, updateRouteState } from './routeFilter.js';     // Reittien suodatus
-import { findAlternativeRoute } from './routeFilter.js';
+import { getApprovedRoutes } from './routeFilter.js';     // Reittien suodatus
 import { callForVerify } from './routeFilter.js';
 
 export let geojsonData;                                                     // Reittidata
-export function setRouteVerified(value) {                                      // Päivittää muuttujan arvoa routeFilter-tiedostosta
-    routeVerified = value;
+export function setVerifiedByShortRoute(value) {                            // Päivittävät muuttujien arvoa routeFilter-tiedostosta
+    verifiedByShortRoute = value;
 }
-export function getRouteVerified() {
-    return routeVerified;
+export function getVerifiedByShortRoute() {
+    return verifiedByShortRoute;
 }
-export function setSceneryRouting(value) {
+export function setVerifiedByCoordinates(value) {
+    verifiedByCoordinates = value;
+}
+export function getVerifiedByCoordinates() {
+    return verifiedByCoordinates;
+}
+export function setVerifiedByScenery(value) {
+    verifiedByScenery = value;
+}
+export function getVerifiedByScenery() {
+    return verifiedByScenery;
+}
+export function setSceneryRouting(value) {                                  // Maisemareittihaku päälle/pois
     sceneryRouting = value;
 }
 
@@ -269,8 +235,15 @@ function checkBounds(startLat, startLng, endLat, endLng) {  // Funktio tarkistaa
 
 
 async function getRoute(startLat, startLng, endLat, endLng) {   // Reitinhakufunktio lähettää hakupyynnön ORS-palvelimelle. Osoitteen muuttujissa on haettavat koordinaatit sekä APIkey. Lisäparametrilla määritetään haettavaksi kolme reittivaihtoehtoa.
+    setVerifiedByShortRoute(false);
+    setVerifiedByCoordinates(false);
+    setVerifiedByScenery(false);
+    let originalRoute;
+    let shortRoute;
+    let validRoute;
+    let sceneryRoute;
     if (sceneryRouting) {
-        getApprovedRoutes();                // Puretaan heinola.json-tiedoston sallitut reitit tiedostossa routeFilter
+        await getApprovedRoutes();                // Puretaan heinola.json-tiedoston sallitut reitit tiedostossa routeFilter
     }
 
     if (currentRouteLayer) {                // Olemassaoleva karttakerros poistetaan, jos reittiä on jo haettu aiemmin
@@ -279,32 +252,47 @@ async function getRoute(startLat, startLng, endLat, endLng) {   // Reitinhakufun
     const url = `https://api.openrouteservice.org/v2/directions/driving-car?start=${startLng},${startLat}&end=${endLng},${endLat}&api_key=${apiKey}`;    
     try {                                                                       // Haetaan pyydetty data
         const response = await fetch(url);
-        const data = await response.json();    
+        let data = await response.json();    
             if (data.features && data.features.length > 0) {                    // Tarkistetaan, onko palvelimelta vastaanotettu mitään
                 let route = data.features[0];
                 geojsonData = route.geometry;                                   // Muuttuja sisältää reitin geometrian, eli koordinaattitiedot
+                originalRoute = geojsonData;
                 if (sceneryRouting) {
-                    await callForVerify();                                      // Ensimmäisessä tarkistuksessa korkeintaan kymmenen koordinaattipisteen reittihaku palauttaa alkuperäisen reitin takaisin
-                    setRouteVerified(true);
-                    if (!getRouteVerified()) {                                  
-                        await updateRouteState();                               // Tarkistetaan, onko yli 11 koordinaattipisteen reittihaku ehdot täyttävä. Jos, niin alkuperäinen reittihaku palautetaan
-                        if (!getRouteVerified()) { 
-                            let alternativeRoute = await findAlternativeRoute();// Jos aiemmat tarkistukset eivät täytä maisemahaun kriteereitä, muodostetaan polygoni vältettävistä alueista ja haetaan uudelleen
-                            if (geojsonData !== alternativeRoute) {             // Jos vastaanotettu reitti on eri kuin alkuperäisen haun tulos,
-                                geojsonData = alternativeRoute;                 // uusi reitti asetetaan geojsonData-muuttujaan.
+                    if (shortRoute === undefined) {
+                            shortRoute = await callForVerify();                 // Ensimmäisessä tarkistuksessa korkeintaan kymmenen koordinaattipisteen reittihaku palauttaa alkuperäisen reitin takaisin
+                        } else if (validRoute === undefined) {                                  
+                            validRoute = await callForVerify();                 // Tarkistetaan, onko yli 11 koordinaattipisteen reittihaku ehdot täyttävä. Jos, niin alkuperäinen reittihaku palautetaan                
+                        } else if (sceneryRoute === undefined) {
+                            let response = await callForVerify();               // Haetaan maisemareitti
+                        //    const data = await response.json();
+                            console.log(response);  // EI TULOSTA MITÄÄN !!!!!!!!!!!! TARKISTA JA SIIRRÄ TARVITTAESSA REITTIHAKU MAIN.JS !!!!!!!!!!
+                            if (data.routes && data.routes.length > 0) {
+                                sceneryRoute = data.routes[0];
+                                setVerifiedByScenery(true);
+                                console.log('Uusi reitti palautettu');
+                            } else {
+                                console.error('Ei reittejä.');
                             }
-                            setRouteVerified(true);
                         }
                     }
-                }
-                if (!sceneryRouting || getRouteVerified()) {    // Suoritetaan, mikäli: a) maisemaraittihaku on pois päältä, tai b) haettu reitti on lyhyt tai muuten suodatuskriteerit täyttävä
-                    currentRouteLayer = L.geoJSON(geojsonData).addTo(map);          // Asetetaan reittikerros kartalle
-                    //calculateDistance();                                          // Laskee reitin pituuden linnuntietä
-                    if (geojsonData.coordinates.length > 0) {
-                        map.fitBounds(currentRouteLayer.getBounds(), {padding: [180, 50]});    // Piirtää reitin marginaalin kanssa
+                    const routes = [shortRoute, validRoute, sceneryRoute];      // Käydään reittisuodatuksen tulos läpi
+                    let foundRoute = false;
+                    for (const route of routes) {
+                        if (route !== undefined) {
+                            console.log("Suodatettu reitti löydetty");
+                            foundRoute = true;
+                            geojsonData = route;
+                        }
                     }
+                    if (!foundRoute) {
+                        console.error("Suodatettuja reittejä ei löytynyt, palautetaan alkuperäinen reitti");
+                        geojsonData = originalRoute;
+                    }
+
+                currentRouteLayer = L.geoJSON(geojsonData).addTo(map);              // Asetetaan reittikerros kartalle
+                //calculateDistance();                                              // Laskee reitin pituuden linnuntietä (funktio valmis, ei toistaiseksi käytössä)
+                map.fitBounds(currentRouteLayer.getBounds(), {padding: [180, 50]}); // Piirtää reitin marginaalin kanssa
                 }
-            }
         } catch(err) {                              // Tulostetaan virhe konsoliin, mikäli ensimmäinen reittihaku epäonnistuu (palvelinvirhe)
             console.error('Virhe:', err);
         }
@@ -498,8 +486,8 @@ function placeMarker(addressType, lat, lng) {       // Asettaa markerit kartalle
         }
     }
     if (startMarker && endMarker) {
-        document.querySelector('.search').style.display = 'block';
-        const bounds = L.latLngBounds([startMarker.getLatLng(), endMarker.getLatLng()]);
+        document.querySelector('.search').style.display = 'block';      // Jätetään hakulaatikko näkyviin, kun molemmat markerit kartalla. Tällöin ei tarvitse
+        const bounds = L.latLngBounds([startMarker.getLatLng(), endMarker.getLatLng()]);    // erikseen avata laatikkoa reittihakupainikkeen löytämiseksi.
         map.fitBounds(bounds, { padding: [150, 50] });
     }
 }
