@@ -10,7 +10,7 @@
   <div id="map" style="height: 500px;"></div>
   <script>
 
-    const polylineString = 'wqvtJas}}CQYx@cDp@mCBFT`@BDT^nAaFPEHIz@yBXu@tAmEXgALe@`@eBPu@b@iBN]^Q^D\Dv@FD@RBnAJZBb@Dt@Fh@D~@H^Bd@CnE}AXW`@_AJs@Fy@@s@hSnBlHz@xARxCT~EZfDd@bDdAjM`GbC~@tK|EdBhAfCvAlAn@l@NNPJT@DFPLDF?VL`DfCpD`CxBnALVD@LGbAr@`@l@`@fA`BdH|@rDt@`CXr@T\hGdFlDjCxGfF|CfClB~A`DlCn@p@T`@tDlIb@nA`@tANp@Jd@nA`Gd@|BhBvJ^hCZjCVzCbA~TXxFHhA`ArJfE|Y~ArKzA|Jr@nEp@pDv@pDXhBFj@BfAG`AU~A]`DSrCGzBIzCAhB@fCFbG@f@HlD`@pIFj@TfA|AW?mAC_ACiAI{CAo@EgA}@R';
+    const polylineString = 'irvtJ{s}}Cx@cDp@mCBFT`@BDT^nAaFPEHIz@yBXu@tAmEXgALe@`@eBPu@b@iBN]^Q^D\Dv@FD@RBnAJZBb@Dt@Fh@D~@H^Bd@CnE}AXW`@_AJs@Fy@@s@hSnBlHz@xARxCT~EZfDd@bDdAjM`GbC~@tK|EdBhAfCvAlAn@l@NNPJT@DFPLDF?VL`DfCpD`CxBnALVD@LGbAr@`@l@`@fA`BdH|@rDt@`CXr@T\hGdFlDjCxGfF|CfClB~A`DlCn@p@T`@tDlIb@nA`@tANp@Jd@nA`Gd@|BhBvJ^hCZjCVzCbA~TXxFHhA`ArJfE|Y~ArKzA|Jr@nEp@pDv@pDXhBFj@BfAG`AU~A]`DSrCGzBIzCAhB@fCFbG@f@HlD`@pIFj@TfA|AW?mAC_ACiAI{CAo@EgAC_AC_Aa@J';
     const decodedCoordinates = polyline.decode(polylineString);
     const coordinates = decodedCoordinates.map(coord => [coord[0], coord[1]]);
     const map = L.map('map').setView(coordinates[0], 13);

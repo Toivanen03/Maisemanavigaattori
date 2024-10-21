@@ -1,7 +1,7 @@
-import { apiKey } from './config.js';
-import { geojsonData, getVerifiedByScenery } from './main.js';    // Haetut reittikoordinaatit
-import { getVerifiedByShortRoute, setVerifiedByShortRoute } from './main.js';
-import { getVerifiedByCoordinates, setVerifiedByCoordinates } from './main.js';
+import { getVerifiedByScenery, setVerifiedByScenery } from './main.js';    // Haetut reittikoordinaatit
+import { setVerifiedByShortRoute } from './main.js';
+import { setVerifiedByCoordinates } from './main.js';
+import { updatePolygon } from './main.js';
 
 let filteredWays;                           // Sallitut reittikoordinaatit
 let originalRoute;                          // Tallennetaan alkuperäinen reitti lyhyen haun palauttamiseksi
@@ -18,13 +18,13 @@ export async function getApprovedRoutes() { // Haetaan Overpass Turbolla luotu J
 }
 
 
-export async function callForVerify() {
-        return await verifyRoutes();
+export async function callForVerify(geojsonData) {
+    originalRoute = geojsonData;
+    return verifyRoutes(geojsonData);
 }
 
 
-async function verifyRoutes() {                                     // Koordinaattien muunnos vertailukelpoiseen muotoon sekä keskinäinen vertailu
-    originalRoute = geojsonData;
+async function verifyRoutes(geojsonData) {                                     // Koordinaattien muunnos vertailukelpoiseen muotoon sekä keskinäinen vertailu
     let routeCoords = [];
     let filteredWaysCoords = [];
 
@@ -37,7 +37,7 @@ async function verifyRoutes() {                                     // Koordinaa
     if (routeCoords.length <= 10) {                                 // Jos haettava reitti on lyhyt, uutta hakua ei suoriteta, vaan palautetaan alkuperäinen
         setVerifiedByShortRoute(true);
         console.log('Ei muutoksia, lyhyt reitti');
-        return originalRoute;
+        return geojsonData;
     }
     
     if (filteredWays) {                                             // Sallitut reitit heinola.json -tiedostosta puretaan koordinaateiksi
@@ -48,13 +48,13 @@ async function verifyRoutes() {                                     // Koordinaa
         });
     }
 
-        function compareCoords(coord1, coord2) {                        // Vertaillaan kolmea ensimmäistä desimaalia,
-            let lon1 = coord1[0].toFixed(3);                            // mutta koordinaatit kuitenkin tallennetaan täydellä tarkkuudella
-            let lat1 = coord1[1].toFixed(3);
-            let lon2 = coord2[0].toFixed(3);
-            let lat2 = coord2[1].toFixed(3);
-            return lon1 === lon2 && lat1 === lat2;
-        }
+    function compareCoords(coord1, coord2) {                        // Vertaillaan kolmea ensimmäistä desimaalia,
+        let lon1 = coord1[0].toFixed(3);                            // mutta koordinaatit kuitenkin tallennetaan täydellä tarkkuudella
+        let lat1 = coord1[1].toFixed(3);
+        let lon2 = coord2[0].toFixed(3);
+        let lat2 = coord2[1].toFixed(3);
+        return lon1 === lon2 && lat1 === lat2;
+    }
 
     let validCoords = routeCoords.filter(coord1 =>
         filteredWaysCoords.some(coord2 => compareCoords(coord1, coord2))                        // Muunnettujen koordinaattien vertailu
@@ -68,12 +68,15 @@ async function verifyRoutes() {                                     // Koordinaa
     
     if (validCoords.length > 0 && validCoords.length >= (routeCoords.length * 0.8)) {           // Jos haettuja koordinaatteja on tarpeeksi, kutsutaan funktiota arvolla true
         setVerifiedByCoordinates(true);
+        setVerifiedByShortRoute(false);
         console.log('Reitti kelpaa, valideja ', validCoords.length, ' ja pisteitä ', routeCoords.length);
-        return originalRoute;
+        return geojsonData;
     } else if (!getVerifiedByScenery()) {
+        setVerifiedByShortRoute(false);
+        setVerifiedByCoordinates(false);
         console.log('Haetaan uutta reittiä, kelpoja koordinaatteja ', validCoords.length, ' ja pisteitä ', routeCoords.length);
-        await handleNewRoute(routeCoords);                                                      // RouteCoords sisältää epäkelvot koordinaatit
-    };
+        return await handleNewRoute(routeCoords);                                                      // RouteCoords sisältää epäkelvot koordinaatit
+};
 }
 
 
@@ -108,7 +111,7 @@ async function drawPolygon(coordsToAvoid) {
     }
 
     coordsToAvoid.push(...reversedCoords);                                  // Lopuksi listat yhdistetään
-    await checkRotation(coordsToAvoid);
+    return await checkRotation(coordsToAvoid);
 }
 
 
@@ -149,7 +152,7 @@ async function checkRotation(coordsToAvoid) {   // Funktion algoritmi tarkistaa 
             i++;
         }
     }
-    await checkForLineCrossing(coordsToAvoid);
+    return await checkForLineCrossing(coordsToAvoid);
 }
 
 
@@ -177,7 +180,7 @@ async function checkForLineCrossing(coordsToAvoid) {    // Tämä funktio sekä 
     if (coordsToAvoid[0][0] !== coordsToAvoid[coordsToAvoid.length -1][0] || coordsToAvoid[0][1] !== coordsToAvoid[coordsToAvoid.length -1][1]) {
         coordsToAvoid.push(coordsToAvoid[0]);           // Lisätään ensimmäinen koordinaatti on myös viimeiseksi, jotta polygoni sulkeutuu
     }
-    await createPolygon(coordsToAvoid);
+    return await createPolygon(coordsToAvoid);
 }
 
 
@@ -217,46 +220,16 @@ function doSegmentsIntersect(A, B, C, D) {
 
 
 async function createPolygon(coordsToAvoid) {       // Muotoilee ja palauttaa lopullisen polygonin
-    function formatPolygon(coords) {
+    async function formatPolygon(coords) {
         return {
             type: "Polygon",
             coordinates: [coords]
         };
     }
 
-    const polygon = formatPolygon(coordsToAvoid);
-    await findAlternativeRoute(polygon);
-}
-
-
-
-
-
-async function findAlternativeRoute(polygon) {
-    let [startLng, startLat] = document.getElementById('startPointCoords').value.split(',').map(part => parseFloat(part.trim()));
-    let [endLng, endLat] = document.getElementById('endPointCoords').value.split(',').map(part => parseFloat(part.trim()));
-    let startPoint = [startLat, startLng];
-    let endPoint = [endLat, endLng];            // Valmistellaan lähtö- ja loppupisteiden koordinaatit uutta reittihakua varten
-
-    const url = 'https://api.openrouteservice.org/v2/directions/driving-car';
-    const request = {                           // Asetetaan hakuun alku- ja loppupisteet sekä vältettävä polygoni
-        coordinates: [startPoint, endPoint],
-        options: {
-            "avoid_polygons": polygon           // Vältettävät koordinaatit ovat muuttujassa polygon
-        }
-    };
-    try {                                       // Lähetetään reittihakupyyntö
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': apiKey
-            },
-            body: JSON.stringify(request)
-        });   
-        return "test";      // PALAUTUS EI LÄHDE OIKEIN TAI VASTAANOTTO EI ONNISTU, TARKISTA !!!!!
-    } catch (error) {
-        console.error('Virhe: ', error);
-        return null;
-    }
+    const polygon = await formatPolygon(coordsToAvoid);
+    setVerifiedByShortRoute(false);
+    setVerifiedByCoordinates(false);
+    setVerifiedByScenery(true);
+    updatePolygon(polygon);
 }
