@@ -14,15 +14,12 @@
     <script src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script>
     <script src="https://js.api.here.com/v3/3.1/mapsjs-service.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Days+One&display=swap" rel="stylesheet">
-    
-    
-
 </head>
 <body> 
-    <nav id="nav-panel" class="nav-panel">
+    <div class="panel">
         <span id="username-display" class="hide">Kirjautuneena: </span>
         <h3>Maisemanavigaattori</h3>  
-    </nav>
+    </div>
 
     
  
@@ -34,9 +31,73 @@
             ja pienempien katujen kautta, mikäli vain mahdollista.</p>
     </div>
     
-    
+    <div class="menu">
+        <nav>
+            <div id="login" class="menu-item">
+                <img src="images/login.png" alt="login">
+            </div>
+            <div id="toggle-info" class="menu-item">
+                <img src="images/info.png" alt="info">
+            </div>
+            <div id="search-route" class="menu-item">
+                <img src="images/search.png" alt="search">
+            </div>
+            <div id="fullscreen-toggle" class="menu-item">
+                <img src="images/full.png" alt="fullscreen">
+            </div>
+            <div class="current-location menu-item">
+                <img id="findMyLocation" src="images/location.png" alt="current-location-icon" onclick="handlePermission(true)">
+            </div>
+        </nav>
+    </div>
+
+    <div id="login-form" class="hide">
+        <form id="login-form-element">
+            
+            <h4>Kirjaudu</h4>
+            <input type="text" id="username" name="username" placeholder="admin" required>
+            <input type="password" id="password" name="password" placeholder="pass" required>
+            <button id="login" type="submit">Kirjaudu</button>
+            <span id="notification" ></span>
+        </form>
+    </div>
+
+    <div class="search hide">
+        <div class="search-top">
+         <h5> Reittivalinnat</h5>
+        <p id="removeRoutes">Tyhjennä</p>
+        </div>
+        <div>
+            <label for="startPoint">Lähtöpiste:</label>
+            <input type="text" id="startPoint" placeholder="Anna lähtöpiste">
+            <ul id="startSuggestionsList"></ul>
+        </div>
+        <div>
+            <label for="endPoint">Määränpää:</label>
+            <input type="text" id="endPoint" placeholder="Anna määränpää">
+            <ul id="endSuggestionsList"></ul>
+        </div>
+        <div>
+            <button id="findRoute">Etsi reitti</button>
+            <button id="navigateRoute"  style="display: none;" >Navigoi</button>
+            <div id="routeDistance"  style="display: none;">Matka: ? km</div>
+        </div>
+        <div class="maisema-selection">
+            <p id="toggle-maisema">Maisemareitti</p>
+            <label class="switch hide" id="maisema-switch"> 
+                <input type="checkbox" id="maisema-checkbox" checked>
+                <span class="slider"></span>
+            </label>
+            <span class="switchText hide" id="switch-text">Käytössä</span>
+        </div>
+    </div>
+
+
     <div id="map-container">
+        
         <div id="map">
+            
+            <!-- vanha menu
             <div class="side-menu-left">
                 <div id="login"><img src="images/login.png" alt="login"></div>
                 <div id="toggle-info"><img src="images/info.png" alt="info"></div>
@@ -44,7 +105,9 @@
                 <div id="fullscreen-toggle"><img src="images/full.png" alt="fullscreen"></div>
                 <div class="current-location"><img id="findMyLocation" src="images/location.png" alt="current-location-icon" onclick="handlePermission(true)"></div>
             </div>
+            -->
 
+        <!-- vanha login
             <div id="login-form" class="hide">
                 <form id="login-form-element">
                     <h4>Kirjaudu</h4>
@@ -55,37 +118,9 @@
                     <button type="submit">Kirjaudu</button>
                 </form>
             </div>
+                -->
 
-
-            <div class="search">
-                <div class="search-top">
-                 <h5> Reittivalinnat</h5>
-                <p id="removeRoutes">Tyhjennä</p>
-                </div>
-                <div>
-                    <label for="startPoint">Lähtöpiste:</label>
-                    <input type="text" id="startPoint" placeholder="Anna lähtöpiste">
-                    <ul id="startSuggestionsList"></ul>
-                </div>
-                <div>
-                    <label for="endPoint">Määränpää:</label>
-                    <input type="text" id="endPoint" placeholder="Anna määränpää">
-                    <ul id="endSuggestionsList"></ul>
-                </div>
-                <div>
-                    <button id="findRoute">Etsi reitti</button>
-                    <button id="navigateRoute"  style="display: none;" >Navigoi</button>
-                    <div id="routeDistance"  style="display: none;">Matka: ? km</div>
-                </div>
-                <div class="maisema-selection">
-                    <p id="toggle-maisema">Maisemareitti</p>
-                    <label class="switch hide" id="maisema-switch"> 
-                        <input type="checkbox" id="maisema-checkbox" checked>
-                        <span class="slider"></span>
-                    </label>
-                    <span class="switchText hide" id="switch-text">Käytössä</span>
-                </div>
-            </div>
+            
 
             <div id="loading" style="display: none;">
                 <div class="loading-border">
@@ -138,6 +173,7 @@
     </div>
 
     <script type="module" src="javascript/utils.js"></script>
+    <script type="module" src="javascript/login.js"></script>
 
 </body>
 </html>
