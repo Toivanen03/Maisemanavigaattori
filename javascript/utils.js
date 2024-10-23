@@ -8,11 +8,7 @@ const startSuggestionsList = document.getElementById('startSuggestionsList');
 const endSuggestionsList = document.getElementById('endSuggestionsList');
 const maisemaSwitch = document.getElementById('maisema-switch');
 const switchText = document.getElementById('switch-text');
-const menu = document.querySelector('.menu');
-const menuItems = menu.querySelectorAll('.menu-item');
 const findRouteButton = document.getElementById('findRoute');
-const startPoint = document.getElementById('startPoint').value;
-const endPoint = document.getElementById('endPoint').value;
 
 // Haetaan herestä osoitteet
 function fetchSuggestions(query, suggestionsList) {
@@ -110,13 +106,10 @@ document.getElementById('toggle-maisema').addEventListener('click', function(eve
 document.getElementById('maisema-checkbox').addEventListener('change', function() {
     if (this.checked) {
         switchText.textContent = "Käytössä";
-      
-        console.log('Maisemareitti käytössä');
-        console.log('Maisemareitti?');
+        setSceneryRouting(true);
     } else {
         switchText.textContent = "Ei käytössä";
-     
-        console.log('Maisemareitti ei käytössä');
+        setSceneryRouting(false);
     }
 });
 
