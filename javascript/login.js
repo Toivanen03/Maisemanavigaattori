@@ -1,17 +1,24 @@
 // Pyykkönen
 // Käyttäjän kirjautumista ja mahdollista erillistä valikkoa kirjautuneelle käyttäjälle
 console.log('Tunnukset = placeholder');
+
+// Muuttujat
 const loginForm = document.getElementById('login-form');
 const loginFormElement = document.getElementById('login-form-element');
 const loginDiv = document.getElementById('login');
 const loginImage = loginDiv.querySelector('img');
 const notification = document.getElementById('notification');
 const usernameDisplay = document.getElementById('username-display');
+const settingsMenu = document.getElementById('settings-menu');
+const settingsList = document.getElementById('settings-list');
+const settingsIcon = document.getElementById('settings');
 
+// Kirjautuminen ikonista
 document.getElementById('login').addEventListener('click', function() {
     document.getElementById('login-form').classList.toggle('hide');
 });
 
+// Muutama testikäyttäjä, näillehän voisi luoda lisää ominaisuuksia
 const users = [
   {
     username: 'admin',
@@ -36,6 +43,9 @@ const users = [
   }
 ];
 
+
+// Napataan inputtien arvot ja kirjautumislogiikka. Kirjautuminen siis login-kuvakkeesta
+// ja onnistuneen kirjautumisen login muuttuu logoutiksi. Myös settings-kuvake on näkyvillä vain kirjautuneena.
 loginFormElement.addEventListener('submit', function(event) {
   event.preventDefault();
   const username = document.getElementById('username').value;
@@ -50,14 +60,15 @@ loginFormElement.addEventListener('submit', function(event) {
     notification.textContent = '';
     console.log(`Kirjautuneena: ${user.name} ${user.lastName}`);
     console.log(`Käyttäjän rooli: ${user.role}`);
-    usernameDisplay.textContent = `Kirjautuneena: ${user.name} ${user.lastName}`;
+    usernameDisplay.innerHTML = `Kirjautuneena: ${user.name} ${user.lastName}<br>Rooli: ${user.role}`;
     usernameDisplay.classList.remove('hide');
+    document.getElementById('settings').style.display = 'flex';
+    // Asetusvalikko näkyviin käyttäjän roolin mukaan
+    displaySettingsMenu(user.role);
 } else {
-    loginForm.classList.remove('flash');
     loginForm.classList.add('flash');
     notification.textContent = 'Väärä käyttäjätunnus tai salasana!';
     loginFormElement.reset();
-   
 
     setTimeout(() => {
       notification.textContent = '';
@@ -68,7 +79,11 @@ loginFormElement.addEventListener('submit', function(event) {
     }, 1000);
 }
 });
-
+// Toggle asetus-kuvakkeelle
+document.getElementById('settings').addEventListener('click', function() {
+  settingsMenu.classList.toggle('hide');
+});
+// Uloskirjausta
 loginImage.addEventListener('click', function() {
   if (loginImage.alt === 'logout') {
       loginImage.src = 'images/login.png';
@@ -77,9 +92,12 @@ loginImage.addEventListener('click', function() {
       usernameDisplay.classList.add('hide');
       console.log('Kirjauduttiin ulos?');
       usernameDisplay.textContent = '';
+      settingsMenu.classList.add('hide');
+      settingsIcon.style.display = 'none';
   }
 });
 
+// Suljetaan login-form jos klikataan sen ulkopuolella
 document.addEventListener('click', function(event) {
   const isClickInsideForm = loginForm.contains(event.target);
   const isClickInsideImage = loginImage.contains(event.target);
@@ -89,3 +107,49 @@ document.addEventListener('click', function(event) {
       loginForm.classList.add('hide');
   }
 });
+
+
+// Tässä luodaan asetusvalikot kirjautuneelle käyttäjälle, roolin mukaan
+function displaySettingsMenu(role) {
+  settingsList.innerHTML = '';
+  const closeButton = document.createElement('button');
+  closeButton.textContent = 'Poistu';
+  closeButton.style.marginTop = '10px';
+  closeButton.addEventListener('click', function() {
+    settingsMenu.classList.add('hide');
+  });
+
+  // Kaikelle yhteiset asetukset
+  const commonSettings = [
+    'Muokkaa profiilia',
+    'Vaihda salasana',
+    'Omat reitit',
+    'Tuki'
+  ];
+
+ 
+  commonSettings.forEach(setting => {
+    const li = document.createElement('li');
+    li.textContent = setting;
+    settingsList.appendChild(li);
+  });
+
+  // Adminille enemmän asetuksia
+  if (role === 'Admin') {
+    const adminSettings = [
+      'Käyttäjähallinta',
+      'Raportit',
+      'Asetukset'
+    ];
+    
+    adminSettings.forEach(setting => {
+      const li = document.createElement('li');
+      li.textContent = setting;
+      settingsList.appendChild(li);
+    });
+  }
+
+  
+  settingsList.appendChild(closeButton);
+  settingsMenu.classList.remove('hide');
+}
