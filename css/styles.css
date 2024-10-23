@@ -191,9 +191,6 @@ button:hover {
     background-color: #0056b3;
 }
 
-
-
-
 #routeDistance {
     margin-top: 10px;
     font-weight: bold;
@@ -202,10 +199,7 @@ button:hover {
 .maisema-selection {
     text-align: center;
     cursor: pointer;
-   
 }
-
-
 
 #settings-icon {
     position: absolute;
@@ -250,13 +244,13 @@ button:hover {
 
 .leaflet-top {
     position: absolute;
-    top: 30px !important;
-    right: 10px !important;
+    top: 10px !important;
+    right: 7px !important;
 }
 .leaflet-control {
     position: absolute;
-    top: 30px !important;
-    right: 10px !important;
+    top: 10px !important;
+    right: 7px !important;
 }
 
 .switch {
@@ -381,11 +375,6 @@ input:checked + .slider:before {
 }
 
 
-
-
-
-
-
 .locationQueryBox {                         /* Sijaintilupalaatikko */
     position: fixed;
     top: 15%;
@@ -485,14 +474,12 @@ input:checked + .slider:before {
 
 
 @media (max-width: 700px) {
-
-
-        
+    
     .menu {
         position: fixed;
         bottom: 0;
         width: 100vw;
-        height: 80px;
+        height: 60px;
         padding: 10px;
         display: flex;
     }
@@ -518,15 +505,27 @@ input:checked + .slider:before {
 
     .search {
         position: absolute;
-        left: 0;
-        width: 100%;
-        max-width: 100%;
+        left: 50px;
+        width: 300px;
+        max-width: 90%;
         top: 30%;
-        transform: translate(-50%, 100%);
+        transform: translateX(-50%);
         opacity: 0;
         animation: slideInFromBottom 0.5s forwards ease-out;
         padding: 0;
         margin: 0;
+    }
+
+    .search-top{
+        margin-top: 10px;
+        padding-left: 10px;
+        padding-right: 10px;
+
+    }
+
+    #removeRoutes{
+        margin-right: 10px;
+        padding-top: 5px;
     }
 
 

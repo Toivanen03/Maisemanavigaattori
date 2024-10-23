@@ -1,35 +1,61 @@
+// Pyykkönen
+// Käyttäjän kirjautumista ja mahdollista erillistä valikkoa kirjautuneelle käyttäjälle
+console.log('Tunnukset = placeholder');
 const loginForm = document.getElementById('login-form');
 const loginFormElement = document.getElementById('login-form-element');
 const loginDiv = document.getElementById('login');
 const loginImage = loginDiv.querySelector('img');
+const notification = document.getElementById('notification');
+const usernameDisplay = document.getElementById('username-display');
 
 document.getElementById('login').addEventListener('click', function() {
     document.getElementById('login-form').classList.toggle('hide');
 });
 
-const User = {
-    correctUsername: 'admin',
-    correctPassword: 'pass',
-    role: 'Admin',
-};
+const users = [
+  {
+    username: 'admin',
+    password: 'pass',
+    name: 'Pekka',
+    lastName: 'Puupää',
+    role: 'Admin'
+  },
+  {
+    username: 'user1',
+    password: 'pass1',
+    name: 'Seppo',
+    lastName: 'Taalasmaa',
+    role: 'User'
+  },
+  {
+    username: 'user2',
+    password: 'pass2',
+    name: 'Ismo',
+    lastName: 'Laitela',
+    role: 'User'
+  }
+];
 
 loginFormElement.addEventListener('submit', function(event) {
   event.preventDefault();
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
-  if (username === User.correctUsername && password === User.correctPassword) {
+  const user = users.find(u => u.username === username && u.password === password);
+
+  if (user) {
     loginForm.classList.add('hide');
     loginImage.src = 'images/logout.png';
     loginImage.alt = 'logout';
     loginFormElement.reset();
-    document.getElementById('notification').textContent = '';
-    console.log(`Kirjautuneena: ${User.correctUsername}, Salasana: ${User.correctPassword}`);
-    console.log(`Käyttäjän rooli: ${User.role}`);
+    notification.textContent = '';
+    console.log(`Kirjautuneena: ${user.name} ${user.lastName}`);
+    console.log(`Käyttäjän rooli: ${user.role}`);
+    usernameDisplay.textContent = `Kirjautuneena: ${user.name} ${user.lastName}`;
+    usernameDisplay.classList.remove('hide');
 } else {
     loginForm.classList.remove('flash');
     loginForm.classList.add('flash');
-    const notification = document.getElementById('notification');
-    notification.textContent = 'Wrong username or password!';
+    notification.textContent = 'Väärä käyttäjätunnus tai salasana!';
     loginFormElement.reset();
    
 
@@ -48,7 +74,9 @@ loginImage.addEventListener('click', function() {
       loginImage.src = 'images/login.png';
       loginImage.alt = 'login';
       loginForm.classList.remove('hide');
+      usernameDisplay.classList.add('hide');
       console.log('Kirjauduttiin ulos?');
+      usernameDisplay.textContent = '';
   }
 });
 
@@ -61,4 +89,3 @@ document.addEventListener('click', function(event) {
       loginForm.classList.add('hide');
   }
 });
-
