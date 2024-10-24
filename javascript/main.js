@@ -26,9 +26,13 @@ startCoords.value = defaultStart;
 
 const routeDistance = document.getElementById("routeDistance");             // Etäisyyskenttä
 
+export let devMode;
+let pageLoaded = false;
+
 import { apiKey, apiKeyHERE } from './config.js';                           // Ladataan API-avaimet
 import { callForVerify } from './routeFilter.js';                           // Reittisuodatuskutsu
-import { setFilterMethod } from './routeFilter.js'                          // Asettaa suodatusehdot (rakenteilla)
+import { setFilterMethod } from './routeFilter.js'                          // Asettaa suodatusehdot
+import { getApprovedRoutes } from './routeFilter.js'                        // Käytetään devModessa, tiedostodatan lataus
 
 
 export function setVerifiedByShortRoute(value) {                            // Päivittävät muuttujien arvoa routeFilter-tiedostosta
@@ -51,6 +55,15 @@ export function getVerifiedByScenery() {
 }
 export function setSceneryRouting(value) {                                  // Maisemareittihaku päälle/pois
     sceneryRouting = value;
+    if (value) {                                                            // Näytetään tai piilotetaan suodatusasetukset tilanteen mukaan
+        if (devMode) {
+            document.getElementById('test-settings').style.display = 'none';
+        } else {
+            document.getElementById('test-settings').style.display = 'flex';
+        }
+    } else {
+        document.getElementById('test-settings').style.display = 'none';
+    }
 }
 export function getSceneryRouting() {
     return sceneryRouting;
@@ -73,6 +86,7 @@ window.onload = function() {                                                // T
                 document.getElementById('locationQueryBox').style.display = 'block';
             }
         });
+    pageLoaded = true;
 }
     
 
@@ -115,7 +129,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('findRoute').addEventListener('click', function() {         // Reittihakupainikkeen kuuntelu
         const coords = [startLat, startLng, endLat, endLng].map(coord => Number(coord));// Varmistetaan, että koordinaatit ovat numeerisessa muodossa
         if (startLat && startLng && endLat && endLng) {
-            getRoute(coords[0], coords[1], coords[2], coords[3]);
+            if (devMode) {
+                checkBounds(coords[0], coords[1], coords[2], coords[3]);
+            } else {
+                getRoute(coords[0], coords[1], coords[2], coords[3]);
+            }
         } else {
             alert("Aseta sekä lähtöpiste että määränpää.");
         }
@@ -132,7 +150,70 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 
 
+window.routingOptions = function() {        // Tuo esiin reittisuodatuksen tiukkuusvalinnan ja estää klikkaukset kartalta elementin läpi
+    map.dragging.disable();
+    const modeBox = document.getElementById('mode-box');
+    modeBox.style.display = 'block';
+    modeBox.classList.remove('hidden');
+    modeBox.addEventListener('click', function(event) {
+        event.stopPropagation();
+    });
+}
+
+
+
+
+function devModeOptions() {                 // Tuo esiin käyttötilan asetusvalikon ja estää klikkaukset kartalta elementin läpi
+    map.dragging.disable();
+    const startMenu = document.getElementById('startMenu');
+    startMenu.style.display = 'block';
+    startMenu.classList.remove('hidden');
+    startMenu.addEventListener('click', function(event) {
+        event.stopPropagation();
+    })
+}
+
+
+
+
+window.selectMode = function(mode) {        // Asettaa käyttötilan ja vaihtaa otsikkotekstin tarvittaessa
+    if (mode === 'development') {
+        devMode = true;
+        document.getElementById('devMode').innerText = 'DevMode';
+        document.getElementById('test-settings').style.display = 'none';
+    } else if (mode === 'staging') {
+        devMode = false;
+    }
+    const startMenu = document.getElementById('startMenu');
+    startMenu.style.display = 'none';
+    startMenu.classList.add('hidden');
+    map.dragging.enable();
+}
+
+
+
+
+window.selectRoutingMode = function(mode) { // Asettaa reitin suodatustavan
+    removeRoute();
+    if (mode === 'strict') {
+        setFilterMethod('strict');
+    } else if (mode === 'less_strict') {
+        setFilterMethod('less_strict')
+    }
+    const modeBox = document.getElementById('mode-box');
+    modeBox.style.display = 'none';
+    modeBox.classList.add('hidden');
+    map.dragging.enable();
+}
+
+
+
+
 function removeRoute() {                    // Poistaa reittikerroksen sekä asetetut merkit kartalta
+    setVerifiedByShortRoute(false);
+    setVerifiedByCoordinates(false);
+    setVerifiedByScenery(false);
+
     if (currentRouteLayer) {
         map.removeLayer(currentRouteLayer);
         currentRouteLayer = null;
@@ -170,10 +251,10 @@ function handlePermission(reply) {                                              
             function(error) {                       // Jos sijaintia ei saada, siitä kerrotaan käyttäjälle, asetetaan oletussijainti ja tulostetaan virhe
                 locationError(error);
             });
-        } else {                                    // Jos sijaintilupaa ei myönnetä, siitä kerrotaan käyttäjälle ja asetetaan oletussijainti
-            handlePermissionDenied(null);
-            locationError(null);
-            }
+    } else {                                        // Jos sijaintilupaa ei myönnetä, siitä kerrotaan käyttäjälle ja asetetaan oletussijainti
+        handlePermissionDenied(null);
+        locationError(null);
+    }
 }
 
 
@@ -206,7 +287,7 @@ function locationError(error) {                 // Funktio määrittelee viestin
 
 
 
-/* TARPEETON FUNKTIO, MIKÄLI DYNAAMINEN SUODATUS JÄTETÄÄN KÄYTTÖÖN !!!!!!
+
 function checkBounds(startLat, startLng, endLat, endLng) {      // Funktio tarkistaa, onko haettavan reitin jokin piste heinola.json-tiedoston
     document.getElementById('loading').style.display = 'block'; // koordinaattien ulkopuolella, mikäli maisemareittihaku on käytössä. Jos on, maisemahaku poistetaan
     if (sceneryRouting) {                                       // käytöstä ennen reittihakua ja näytetään viesti. Tällä estetään suodatustoimintojen aiheuttama kuormitus selaimelle
@@ -244,12 +325,15 @@ function checkBounds(startLat, startLng, endLat, endLng) {      // Funktio tarki
         return lat < minLat || lat > maxLat || lng < minLng || lng > maxLng;
     }
 }
-*/
 
 
 
 async function getRoute(startLat, startLng, endLat, endLng) {       // Reitinhakufunktio lähettää hakupyynnön ORS-palvelimelle. Osoitteen muuttujissa on haettavat koordinaatit sekä APIkey. Lisäparametrilla määritetään haettavaksi kolme reittivaihtoehtoa.
     document.getElementById('loading').style.display = 'block';     // Tuodaan latausanimaatio näkyviin reittihaun alkaessa
+    if (devMode) {                                                  // Kehittäjätilassa kutsutaan tiedostodatan latausta
+        getApprovedRoutes();
+    }
+
     let originalRoute;
 
     if (currentRouteLayer) {                                        // Olemassaoleva karttakerros poistetaan, jos reittiä on jo haettu aiemmin
@@ -355,7 +439,7 @@ function handleData(routeData) {                                    // Tähän f
     seconds = Math.floor(duration % 60);
     timeEstimate = `${hours} tuntia, ${minutes} minuuttia, ${seconds} sekuntia.`
 
-    calculateDistance('handleData', null, null)                     // Laskee reitin pituuden linnuntietä pitkin (tuskin käyttöä tällä)
+    calculateDistance('handleData', null, null)                     // Laskee reitin pituuden linnuntietä pitkin
     .then(directDistance => {
         console.log('Tietä pitkin', distance, ', linnuntietä', directDistance);
     })
@@ -399,7 +483,7 @@ function drawRoute(routeData) {                                         // Reiti
 
 
 
-export async function calculateDistance(caller, firstCoord, secondCoord) {  // Laskee reitin linnuntietä, mietitään onko käyttöä
+export async function calculateDistance(caller, firstCoord, secondCoord) {  // Laskee reitin linnuntietä
     let distance;
     let coord1;
     let coord2;
@@ -580,6 +664,11 @@ function drawMap(lat, lng, zoomLevel) {                                     // K
         }
         checkCoords();                              // Kutsutaan funktiota, joka hakee osoitteen kenttiin ja markereihin
     });
+    if (pageLoaded) {                               // Suoritetaan vain sivun latauksen yhteydessä, kun kartta ladataan ensimmäisen kerran.
+        pageLoaded = false;
+        setFilterMethod('less_strict')              // Asetetaan aluksi väljempi suodatin, jonka jälkeen tuodaan näytölle
+        devModeOptions();                           // toimintamoodin vaihtoehdot. Painikkeet saa uudelleen näkyviin päivittämällä sivun.
+    }
 }
 
 

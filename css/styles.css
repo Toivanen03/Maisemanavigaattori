@@ -13,7 +13,7 @@ html, body{
 
 #map-container {
     position: relative;
-    height: 100vh;
+    height: calc(100vh - 50px);
     width: 100vw;
     display: flex;
     overflow: hidden;
@@ -192,7 +192,7 @@ button:hover {
 }
 
 .panel {
-    position: sticky;
+    position: relative;
     top: 0;
     height: 50px;
     width: 100%;
@@ -344,6 +344,52 @@ input:checked + .slider:before {
 #login-form input {
     margin-bottom: 15px;
     margin-top: 15px;
+}
+
+#startMenu {
+    display: none;
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+    background-color: white;
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    width: 300px;
+    height: auto;
+    padding: 20px;
+    border: solid 3px darkgray;
+    border-radius: 20px;
+    pointer-events: auto;
+}
+
+#startMenu.hidden {
+    pointer-events: none;
+}
+
+#mode-box {
+    display: none;
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+    background-color: white;
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    width: 300px;
+    height: auto;
+    padding: 20px;
+    border: solid 3px darkgray;
+    border-radius: 20px;
+    pointer-events: auto;;
+}
+
+#mode-box.hidden {
+    pointer-events: none;
 }
 
 #settings-menu {

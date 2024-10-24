@@ -4,10 +4,12 @@ import { setVerifiedByCoordinates } from './main.js';
 import { getSceneryRouting } from './main.js';
 import { updatePolygon } from './main.js';
 import { calculateDistance } from './main.js';
+import { devMode } from './main.js';
 
 let filteredWays;                           // Sallitut reittikoordinaatit
 let originalRoute;                          // Tallennetaan alkuperäinen reitti lyhyen haun palauttamiseksi
 let routeFilter;
+let datafile = './mapdata/heinola.json';    // Tiedosto ladataan devModessa
 
 let north;                                  // Muuttujat sallittujen reittien dynaamiseen hakuun
 let east;
@@ -17,19 +19,16 @@ let radius;
 let centerLat, centerLon;
 
 
-
-
-export async function setFilterMethod(method) {     // Asettaa ehtoja suodatukselle, rakenteilla
+export async function setFilterMethod(method) {     // Asettaa reittisuodatuksen ehdot
     if (method === 'strict') {
         routeFilter = "secondary|residential|tertiary|unclassified|service|industrial";
         radius = radius * 5;
     } else if (method === 'less_strict') {
-        routeFilter === "primary|secondary|residential|tertiary|unclassified|service|industrial";
+        routeFilter = "primary|secondary|residential|tertiary|unclassified|service|industrial";
         radius = radius * 2;
     }
 }
 
-/*  SALLITTUJEN REITTIEN KOORDINAATIT MUUNNETTU DYNAAMISESTI HAETTAVAKSI, JOTEN TIEDOSTODATAA EI ENÄÄ TARVITA
 
 export async function getApprovedRoutes() { // Haetaan Overpass Turbolla luotu JSON-data sallituista teistä (pienet tiet ja kadut Heinolan keskustan alueella, suodatus ei vielä toiminnassa)
     try {
@@ -40,13 +39,12 @@ export async function getApprovedRoutes() { // Haetaan Overpass Turbolla luotu J
     catch (err) {
         console.error('Virhe ladattaessa JSON-tiedostoa:', err);
     }
-}*/
+}
 
 
 
 
-async function fetchOverpassData() {                        // Hakee sallitut reitit Overpass-APIsta
-    await setFilterMethod('strict')                         // Testirivi, tälle joku asetus
+async function fetchOverpassData() {                        // Hakee sallitut reitit Overpass-APIsta normaalitilassa, eli ei devModessa
     const overpassQuery = 
         `[out:json];
         (
@@ -90,9 +88,11 @@ async function verifyRoutes(geojsonData) {                          // Koordinaa
         geojsonData.coordinates.forEach((coordinate) => {
             routeCoords.push([coordinate[1], coordinate[0]]);
         });
-        if (getSceneryRouting()) {          // Ohitetaan, mikäli maisemahaku ei ole valittuna. Nopeuttaa prosessointia.
-            await getArea(routeCoords);     // Laskee alkuperäisen reitin äärikoordinaatit, joista määritellään alueen keskipiste uutta hakua varten
-            await fetchOverpassData();      // Kun alueen keskipiste ja koko on saatu, haetaan saaduilla arvoilla data hyväksytyistä teistä.
+        if (!devMode) {
+            if (getSceneryRouting()) {          // Ohitetaan, mikäli maisemahaku ei ole valittuna. Nopeuttaa prosessointia.
+                await getArea(routeCoords);     // Laskee alkuperäisen reitin äärikoordinaatit, joista määritellään alueen keskipiste uutta hakua varten
+                await fetchOverpassData();      // Kun alueen keskipiste ja koko on saatu, haetaan saaduilla arvoilla data hyväksytyistä teistä.
+            }
         }
     }
 

@@ -17,8 +17,7 @@
 </head>
 <body> 
     <div class="panel">
-       
-        <h3>Maisemanavigaattori</h3>  
+        <h3 id="devMode">Maisemanavigaattori</h3>
     </div>
 
     
@@ -50,6 +49,9 @@
             </div>
             <div id="settings" style="display: none;" class="menu-item">
                 <img src="images/settings.png" alt="settings">
+            </div>
+            <div id="test-settings" class="menu-item">
+                <img src="images/settings.png" alt="settings" onclick="routingOptions()">
             </div>
         </nav>
     </div>
@@ -111,6 +113,18 @@
                     </video>
                     <p class="overlay-text">Haetaan reittiä .....</p>
                 </div>
+            </div>
+
+            <div id="startMenu">
+                <p>Valitse käytettävä tila:</p>
+                <button class="btn btn-outline-dark m-1" onclick="selectMode('development')">Kehittäjätila</button>
+                <button class="btn btn-outline-dark m-1" onclick="selectMode('staging')">Esiversio</button>
+            </div>
+
+            <div id="mode-box">
+                <p>Valitse reititystapa:</p>
+                <button class="btn btn-outline-dark m-1" onclick="selectRoutingMode('less_strict')">Joustava</button>
+                <button class="btn btn-outline-dark m-1" onclick="selectRoutingMode('strict')">Tiukka</button>
             </div>
 
             <script type="module" src="javascript/main.js"></script>
