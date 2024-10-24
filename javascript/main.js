@@ -15,25 +15,23 @@ let distance;                                                               //  
 let duration;                                                               //                          - Matkan kesto (sekunteina)
 let timeEstimate                                                            //                          - Muotoiltu matkan kesto
 let directions;                                                             //                          - Reittiopastuksen vaiheet (rakenteilla)
-
-let defaultLat = 61.23345;                                                  // Oletussijainti
-let defaultLng = 26.04378;
-let [startLat, startLng] = startCoords.value.split(',').map(coord => parseFloat(coord.trim())); // Pituus- ja leveysasteet
-let [endLat, endLng] = endCoords.value.split(',').map(coord => parseFloat(coord.trim()));
-
-const defaultStart = defaultLat + ',' + defaultLng;                         // Asetetaan aluksi oletussijainnin koordinaatit
-startCoords.value = defaultStart;
+let startLat, startLng;
+let endLat, endLng;
+let defaultStart;
 
 const routeDistance = document.getElementById("routeDistance");             // Etäisyyskenttä
 
+export let datafile;
 export let devMode;
 let pageLoaded = false;
+let files = ['heinola.json', 'vantaa.json'];
 
 import { apiKey, apiKeyHERE } from './config.js';                           // Ladataan API-avaimet
 import { callForVerify } from './routeFilter.js';                           // Reittisuodatuskutsu
 import { setFilterMethod } from './routeFilter.js'                          // Asettaa suodatusehdot
 import { getApprovedRoutes } from './routeFilter.js'                        // Käytetään devModessa, tiedostodatan lataus
-
+import { bounds } from './routeFilter.js';                                  // Tiedoston sisältämien koordinaattien ääripisteet
+import { defaultLat, defaultLng } from './routeFilter.js';                  // Haetaan lasketut oletuskoordinaatit
 
 export function setVerifiedByShortRoute(value) {                            // Päivittävät muuttujien arvoa routeFilter-tiedostosta
     verifiedByShortRoute = value;
@@ -170,7 +168,60 @@ function devModeOptions() {                 // Tuo esiin käyttötilan asetusval
     startMenu.classList.remove('hidden');
     startMenu.addEventListener('click', function(event) {
         event.stopPropagation();
-    })
+    });
+}
+
+
+
+
+function dataFileSelection() {                 // Tuo esiin vaihtoehdot datatiedoston valinnalle ja estää klikkaukset kartalta elementin läpi
+    map.dragging.disable();
+    const dataFileContainer = document.getElementById('dataFiles');
+    dataFileContainer.style.display = 'block';
+    dataFileContainer.classList.remove('hidden');
+    dataFileContainer.addEventListener('click', function(event) {
+        event.stopPropagation();
+    });
+    createButtons();
+}
+
+
+
+
+function createButtons() {                      // Luo dynaamisesti painikkeet tiedoston valintaa varten.
+    const buttonContainer = document.getElementById('dataFiles');
+    buttonContainer.innerHTML = '<p>Valitse käytettävä tiedosto:</p>';
+    files.forEach(file => {
+        let button = document.createElement('button');
+        button.innerText = file.replace('.json', '').charAt(0).toUpperCase() + file.replace('.json', '').slice(1);
+        button.className = 'btn btn-outline-dark m-1';
+        button.addEventListener('click', function() {
+            setFile(file);
+        });
+        buttonContainer.appendChild(button);
+    });
+}
+
+
+
+
+export async function setFile(value) {
+    datafile = value;
+    const dataFileContainer = document.getElementById('dataFiles');
+    dataFileContainer.style.display = 'none';
+    dataFileContainer.classList.add('hidden');
+    map.dragging.enable();
+    await getApprovedRoutes();                    // Kehittäjätilassa kutsutaan datan latausta tiedoston valitsemisen päätteeksi
+    [startLat, startLng] = startCoords.value.split(',').map(coord => parseFloat(coord.trim())); // Pituus- ja leveysasteet
+    [endLat, endLng] = endCoords.value.split(',').map(coord => parseFloat(coord.trim()));
+    defaultStart = defaultLat + ',' + defaultLng;                         // Asetetaan aluksi oletussijainnin koordinaatit
+    drawMap(defaultLat, defaultLng, 13);
+    const latLngString = `${defaultLat.toFixed(5)},${defaultLng.toFixed(5)}`;
+    startCoords.value = latLngString;
+    reverseGeocode(defaultLat, defaultLng, function(address) {            // Saatu sijainti geokoodataan käänteisesti ja asetetaan osoite tekstinsyöttökenttään ja markeriin
+        startAddress.value = address;
+        startMarker = L.marker([defaultLat, defaultLng]).addTo(map).bindPopup(`<div style="text-align: center;"><b>Tiedoston ${datafile} keskipiste</b></div><br>${address}`).openPopup();
+    });
 }
 
 
@@ -181,6 +232,7 @@ window.selectMode = function(mode) {        // Asettaa käyttötilan ja vaihtaa 
         devMode = true;
         document.getElementById('devMode').innerText = 'DevMode';
         document.getElementById('test-settings').style.display = 'none';
+        dataFileSelection();
     } else if (mode === 'staging') {
         devMode = false;
     }
@@ -287,21 +339,15 @@ function locationError(error) {                 // Funktio määrittelee viestin
 
 
 
-
+// Funktiota käytetään vain devModessa
 function checkBounds(startLat, startLng, endLat, endLng) {      // Funktio tarkistaa, onko haettavan reitin jokin piste heinola.json-tiedoston
     document.getElementById('loading').style.display = 'block'; // koordinaattien ulkopuolella, mikäli maisemareittihaku on käytössä. Jos on, maisemahaku poistetaan
     if (sceneryRouting) {                                       // käytöstä ennen reittihakua ja näytetään viesti. Tällä estetään suodatustoimintojen aiheuttama kuormitus selaimelle
         let message;        
-        let messageEnd = "Heinolan ulkopuolella. Maisemareittihaku on pois käytöstä";
-        const bounds = {
-            minLat: 61.1394963,     // Heinola.json -tiedoston uloimmat koordinaatit
-            maxLat: 61.2798717,
-            minLng: 25.9770522,
-            maxLng: 26.1375315
-        };
+        let messageEnd = `alueen ${datafile.replace('.json', '').charAt(0).toUpperCase() + datafile.replace('.json', '').slice(1)} ulkopuolella. Maisemareittihaku on pois käytöstä.`;
 
-        const isStartOutside = isPointOutsideBounds(startLat, startLng, bounds);
-        const isEndOutside = isPointOutsideBounds(endLat, endLng, bounds);
+        const isStartOutside = isPointOutsideBounds(startLat, startLng);
+        const isEndOutside = isPointOutsideBounds(endLat, endLng);
 
         if (isStartOutside || isEndOutside) {                       // Näytettävä viesti mukautetaan tilanteen mukaan
             if (isStartOutside && isEndOutside) {
@@ -320,7 +366,7 @@ function checkBounds(startLat, startLng, endLat, endLng) {      // Funktio tarki
 
     getRoute(startLat, startLng, endLat, endLng);
 
-    function isPointOutsideBounds(lat, lng, bounds) {
+    function isPointOutsideBounds(lat, lng) {
         const { minLat, maxLat, minLng, maxLng } = bounds;
         return lat < minLat || lat > maxLat || lng < minLng || lng > maxLng;
     }
@@ -330,9 +376,6 @@ function checkBounds(startLat, startLng, endLat, endLng) {      // Funktio tarki
 
 async function getRoute(startLat, startLng, endLat, endLng) {       // Reitinhakufunktio lähettää hakupyynnön ORS-palvelimelle. Osoitteen muuttujissa on haettavat koordinaatit sekä APIkey. Lisäparametrilla määritetään haettavaksi kolme reittivaihtoehtoa.
     document.getElementById('loading').style.display = 'block';     // Tuodaan latausanimaatio näkyviin reittihaun alkaessa
-    if (devMode) {                                                  // Kehittäjätilassa kutsutaan tiedostodatan latausta
-        getApprovedRoutes();
-    }
 
     let originalRoute;
 

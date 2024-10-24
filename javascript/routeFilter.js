@@ -5,11 +5,11 @@ import { getSceneryRouting } from './main.js';
 import { updatePolygon } from './main.js';
 import { calculateDistance } from './main.js';
 import { devMode } from './main.js';
+import { datafile } from './main.js';
 
 let filteredWays;                           // Sallitut reittikoordinaatit
 let originalRoute;                          // Tallennetaan alkuperäinen reitti lyhyen haun palauttamiseksi
 let routeFilter;
-let datafile = './mapdata/heinola.json';    // Tiedosto ladataan devModessa
 
 let north;                                  // Muuttujat sallittujen reittien dynaamiseen hakuun
 let east;
@@ -17,6 +17,8 @@ let south;
 let west;
 let radius;
 let centerLat, centerLon;
+export let bounds;
+export let defaultLat, defaultLng;
 
 
 export async function setFilterMethod(method) {     // Asettaa reittisuodatuksen ehdot
@@ -31,13 +33,22 @@ export async function setFilterMethod(method) {     // Asettaa reittisuodatuksen
 
 
 export async function getApprovedRoutes() { // Haetaan Overpass Turbolla luotu JSON-data sallituista teistä (pienet tiet ja kadut Heinolan keskustan alueella, suodatus ei vielä toiminnassa)
+let filteredWaysCoords = [];
     try {
-        const response = await fetch(datafile);
+        const response = await fetch(`./mapdata/${datafile}`);
         const data = await response.json();
         filteredWays = data.elements;
         } 
     catch (err) {
         console.error('Virhe ladattaessa JSON-tiedostoa:', err);
+    }
+    if (filteredWays) {                                 // Sallitut reitit puretaan koordinaateiksi ja asetetaan listaan koordinaattipareina,
+        filteredWays.forEach((way) => {                 // minkä jälkeen koordinaateista etsitään ääripisteet.
+            way.geometry.forEach((coordinate) => {
+                filteredWaysCoords.push([coordinate.lat, coordinate.lon]);              
+            });
+        });
+        await getArea('filteredWays', filteredWaysCoords);
     }
 }
 
@@ -89,9 +100,9 @@ async function verifyRoutes(geojsonData) {                          // Koordinaa
             routeCoords.push([coordinate[1], coordinate[0]]);
         });
         if (!devMode) {
-            if (getSceneryRouting()) {          // Ohitetaan, mikäli maisemahaku ei ole valittuna. Nopeuttaa prosessointia.
-                await getArea(routeCoords);     // Laskee alkuperäisen reitin äärikoordinaatit, joista määritellään alueen keskipiste uutta hakua varten
-                await fetchOverpassData();      // Kun alueen keskipiste ja koko on saatu, haetaan saaduilla arvoilla data hyväksytyistä teistä.
+            if (getSceneryRouting()) {                      // Ohitetaan, mikäli maisemahaku ei ole valittuna. Nopeuttaa prosessointia.
+                await getArea('geojsonData', routeCoords);  // Laskee alkuperäisen reitin äärikoordinaatit, joista määritellään alueen keskipiste uutta hakua varten
+                await fetchOverpassData();                  // Kun alueen keskipiste ja koko on saatu, haetaan saaduilla arvoilla data hyväksytyistä teistä.
             }
         }
     }
@@ -108,6 +119,7 @@ async function verifyRoutes(geojsonData) {                          // Koordinaa
                 filteredWaysCoords.push([coordinate.lat, coordinate.lon]);              
             });
         });
+        await getArea('filteredWays', routeCoords);
     }
 
     function compareCoords(coord1, coord2) {            // Vertaillaan kolmea ensimmäistä desimaalia,
@@ -144,20 +156,31 @@ async function verifyRoutes(geojsonData) {                          // Koordinaa
 
 
 
-async function getArea(coords) {                        // Hakee koordinaattien ääripisteet. Funktiota käytetään sallittujen
-    const latitudes = coords.map(coord => coord[0]);    // teiden listan muodostamiseksi dynaamisesti
-    const longitudes = coords.map(coord => coord[1]);
+async function getArea(coordsToCheck, coords) {         // Hakee koordinaattien ääripisteet. Funktiota käytetään sallittujen
+    const latitudes = coords.map(coord => coord[0]);    // teiden listan muodostamiseksi dynaamisesti sekä tiedoston mukaisen
+    const longitudes = coords.map(coord => coord[1]);   // alueen ääripisteiden laskemiseksi
 
-    north = Math.max(...latitudes);
-    south = Math.min(...latitudes);
-    east = Math.max(...longitudes);
-    west = Math.min(...longitudes);
+    if (coordsToCheck === 'geojsonData') {
+        north = Math.max(...latitudes);
+        south = Math.min(...latitudes);
+        east = Math.max(...longitudes);
+        west = Math.min(...longitudes);
 
-    centerLat = (north + south) / 2;                    // Keskipisteen määritys
-    centerLon = (east + west) / 2;
+        centerLat = (north + south) / 2;                    // Keskipisteen määritys
+        centerLon = (east + west) / 2;
 
-    let diameter = await calculateDistance('getArea', [south, west], [north, west]);
-    radius = (diameter / 2).toFixed(1)                  // Asettaa reitin säteen laajuuden halkaisijasta
+        let diameter = await calculateDistance('getArea', [south, west], [north, west]);
+        radius = (diameter / 2).toFixed(1)                  // Asettaa reitin säteen laajuuden halkaisijasta
+    } else if (coordsToCheck === 'filteredWays') {
+        bounds = {
+            minLat: Math.min(...latitudes),
+            maxLat: Math.max(...latitudes),
+            minLng: Math.min(...longitudes),
+            maxLng: Math.max(...longitudes)
+        };
+        defaultLat = (bounds.minLat + bounds.maxLat) / 2;
+        defaultLng = (bounds.minLng + bounds.maxLng) / 2;
+    }
 }
 
 
