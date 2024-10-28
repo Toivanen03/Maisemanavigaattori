@@ -71,7 +71,7 @@ html, body{
 
 .leaflet-bottom{
     position: absolute;
-    bottom: 100px;
+    bottom: 60px;
     width: 200px;
 }
 
@@ -631,15 +631,12 @@ input:checked + .slider:before {
     }
 
     .leaflet-bottom{
-        position: absolute;
-        top: 30px;
-        left: 0;
-        width: 200px;
+        position: static;
     }
     
     .leaflet-top {
         position: absolute;
-        top: 30px !important;
+        top: 50px !important;
     }
 
     @keyframes slideInFromBottom {

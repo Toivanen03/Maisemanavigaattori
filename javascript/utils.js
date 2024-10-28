@@ -161,3 +161,5 @@ findRouteButton.addEventListener('click', () => {
 document.addEventListener('click', () => {
     searchDiv.style.display = 'none';
 });
+
+

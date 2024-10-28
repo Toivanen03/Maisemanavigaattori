@@ -5,8 +5,8 @@ console.log('Tunnukset = placeholder');
 // Muuttujat
 const loginForm = document.getElementById('login-form');
 const loginFormElement = document.getElementById('login-form-element');
-const loginDiv = document.getElementById('login');
-const loginImage = loginDiv.querySelector('img');
+const loginIconDiv = document.getElementById('login-icon');
+const loginImage = loginIconDiv.querySelector('img')
 const notification = document.getElementById('notification');
 const usernameDisplay = document.getElementById('username-display');
 const settingsMenu = document.getElementById('settings-menu');
@@ -14,7 +14,7 @@ const settingsList = document.getElementById('settings-list');
 const settingsIcon = document.getElementById('settings');
 
 // Kirjautuminen ikonista
-document.getElementById('login').addEventListener('click', function() {
+loginIconDiv.addEventListener('click', function() {
     document.getElementById('login-form').classList.toggle('hide');
 });
 
@@ -153,3 +153,5 @@ function displaySettingsMenu(role) {
   settingsList.appendChild(closeButton);
   settingsMenu.classList.remove('hide');
 }
+
+

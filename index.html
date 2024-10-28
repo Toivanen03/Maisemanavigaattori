@@ -32,8 +32,8 @@
     
     <div class="menu">
         <nav>
-            <div id="login" class="menu-item">
-                <img src="images/login.png" alt="login">
+            <div id="login-icon" class="menu-item">
+                <img src="images/login.png" alt="login-icon">
             </div>
             <div id="toggle-info" class="menu-item">
                 <img src="images/info.png" alt="info">
@@ -47,18 +47,17 @@
             <div class="current-location menu-item">
                 <img id="findMyLocation" src="images/location.png" alt="current-location-icon" onclick="handlePermission(true)">
             </div>
+            <div id="test-settings" class="menu-item">
+                <img src="images/routing.webp" alt="routing-settings" onclick="routingOptions()">
+            </div>
             <div id="settings" style="display: none;" class="menu-item">
                 <img src="images/settings.png" alt="settings">
-            </div>
-            <div id="test-settings" class="menu-item">
-                <img src="images/settings.png" alt="settings" onclick="routingOptions()">
             </div>
         </nav>
     </div>
 
     <div id="login-form" class="hide">
         <form id="login-form-element">
-            
             <h4>Kirjaudu</h4>
             <input type="text" id="username" name="username" placeholder="admin" required>
             <input type="password" id="password" name="password" placeholder="pass" required>
@@ -165,8 +164,9 @@
             <button id="accept-cookies">Hyväksy</button>
             <button id="decline-cookies">Poistu sivulta</button>
         </div>
-                <input type="hidden" id="startPointCoords">     <!-- Piilotetut tekstikentät, joihin koordinaatit tallentuvat asteina -->
-                <input type="hidden" id="endPointCoords">
+            <input type="hidden" id="startPointCoords">     <!-- Piilotetut tekstikentät, joihin koordinaatit tallentuvat asteina -->
+            <input type="hidden" id="endPointCoords">
+    </div>
     </div>
 
     <script type="module" src="javascript/utils.js"></script>
