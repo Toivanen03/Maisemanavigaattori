@@ -12,13 +12,26 @@ const usernameDisplay = document.getElementById('username-display');
 const settingsMenu = document.getElementById('settings-menu');
 const settingsList = document.getElementById('settings-list');
 const settingsIcon = document.getElementById('settings');
+const searchDiv = document.querySelector('.search');
+const toggleInfo = document.getElementById('toggle-info');
+const infoDiv = document.getElementById('info');
+
 
 // Kirjautuminen ikonista
 loginIconDiv.addEventListener('click', function() {
-    document.getElementById('login-form').classList.toggle('hide');
+  document.getElementById('login-form').classList.toggle('hide');
+  
+  // Jos searchDiv näkyvissä
+  if (!searchDiv.classList.contains('hide')) {
+      searchDiv.classList.add('hide');
+  }
+  // Jos infoDiv näkyvissä
+  if (!infoDiv.classList.contains('hide')) {
+    infoDiv.classList.add('hide');
+}
 });
 
-// Muutama testikäyttäjä, näillehän voisi luoda lisää ominaisuuksia
+// Muutama testikäyttäjä
 const users = [
   {
     username: 'admin',
@@ -83,6 +96,7 @@ loginFormElement.addEventListener('submit', function(event) {
 document.getElementById('settings').addEventListener('click', function() {
   settingsMenu.classList.toggle('hide');
 });
+
 // Uloskirjausta
 loginImage.addEventListener('click', function() {
   if (loginImage.alt === 'logout') {
@@ -153,5 +167,4 @@ function displaySettingsMenu(role) {
   settingsList.appendChild(closeButton);
   settingsMenu.classList.remove('hide');
 }
-
 
