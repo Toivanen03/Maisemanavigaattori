@@ -9,6 +9,13 @@ const endSuggestionsList = document.getElementById('endSuggestionsList');
 const maisemaSwitch = document.getElementById('maisema-switch');
 const switchText = document.getElementById('switch-text');
 const findRouteButton = document.getElementById('findRoute');
+const searchRoute = document.getElementById('search-route');
+const searchDiv = document.querySelector('.search');
+const loginForm = document.getElementById('login-form');
+const toggleInfo = document.getElementById('toggle-info');
+const infoDiv = document.getElementById('info');
+const testSettingsDiv = document.getElementById('test-settings');
+
 
 // Haetaan herestä osoitteet
 function fetchSuggestions(query, suggestionsList) {
@@ -51,17 +58,14 @@ endPointInput.addEventListener('input', function() {
 // Näytetään osoitteet listana allekkain, tässä myös valitaan klikattu osoite
 function displaySuggestions(suggestions, suggestionsList) {
     suggestionsList.innerHTML = '';
-
     if (suggestions.length === 0) {
         return;
     }
-
     suggestions.forEach(suggestion => {
         const li = document.createElement('li');
         li.className = 'list-group-item';
         li.textContent = suggestion.address.label;
         li.addEventListener('click', function() {
-
             const selectedAddress = suggestion.address.label;
             suggestionsList.innerHTML = '';
             if (suggestionsList === startSuggestionsList) {
@@ -72,7 +76,6 @@ function displaySuggestions(suggestions, suggestionsList) {
                 checkAddress('end');
             }
         });
-
         suggestionsList.appendChild(li);
     });
 }
@@ -92,25 +95,24 @@ document.addEventListener('click', function(event) {
 
 // Maisemareitti-kytkintä
 document.getElementById('toggle-maisema').addEventListener('click', function(event) {
-    if (!maisemaSwitch.classList.contains('hide')) {
-
-    } else {
- 
-        maisemaSwitch.classList.remove('hide');
-        switchText.classList.remove('hide');
-    }
+    maisemaSwitch.classList.toggle('hide');
+    switchText.classList.toggle('hide');
     event.stopPropagation();
 });
 
 // Maisemareitti-kytkintä
 document.getElementById('maisema-checkbox').addEventListener('change', function() {
     if (this.checked) {
-        switchText.textContent = "Käytössä";
+        switchText.textContent = 'Käytössä';
         setSceneryRouting(true);
     } else {
-        switchText.textContent = "Ei käytössä";
+        switchText.textContent = 'Ei käytössä';
         setSceneryRouting(false);
     }
+    setTimeout(() => {
+        switchText.classList.toggle('hide');
+        maisemaSwitch.classList.toggle('hide');
+    }, 1000);
 });
 
 
@@ -124,40 +126,37 @@ document.getElementById('fullscreen-toggle').addEventListener('click', function(
 });
 
 
-// Estetään mapin klikkaus sivuvalikossa
 
-document.querySelector('.menu').addEventListener('click', function(event) {
-    event.stopPropagation();
-
-});
-
-// Sama reitinhakuboxille
-document.querySelector('.search').addEventListener('click', function(event) {
-    event.stopPropagation();
-    
-});
-
-
-
-///// Uutta
-
-const searchRoute = document.getElementById('search-route');
-const searchDiv = document.querySelector('.search');
-
-searchRoute.addEventListener('click', (event) => {
-    event.stopPropagation();
-    searchDiv.style.display = searchDiv.style.display === 'block' ? 'none' : 'block';
-});
-
+// Reitin haun jälkeen hakukenttä pois näkyvistä
 findRouteButton.addEventListener('click', () => {
     const startPoint = startPointInput.value;
     const endPoint = endPointInput.value;
     if (startPoint && endPoint) {
-        searchDiv.style.display = 'none';
+        searchDiv.classList.add('hide');
     }
 });
 
-
-document.addEventListener('click', () => {
-    searchDiv.style.display = 'none';
+// Suljetaan login ja info jos klikataan hakua
+searchRoute.addEventListener('click', (event) => {
+    if (!loginForm.classList.contains('hide')) {
+        loginForm.classList.add('hide');
+    }
+    if (!infoDiv.classList.contains('hide')) {
+        infoDiv.classList.add('hide');
+    }
+    searchDiv.classList.toggle('hide');
+    
 });
+
+// Sama infolle, suljetaan login tai haku jos ne on auki
+toggleInfo.addEventListener('click', (event) => {
+    if (loginForm && !loginForm.classList.contains('hide')) {
+        loginForm.classList.add('hide');
+    }
+    if (searchDiv && !searchDiv.classList.contains('hide')) {
+        searchDiv.classList.add('hide');
+    }
+    infoDiv.classList.toggle('hide');
+});
+
+
