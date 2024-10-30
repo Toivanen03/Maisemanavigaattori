@@ -412,6 +412,8 @@ async function getRoute(startLat, startLng, endLat, endLng) {       // Reitinhak
 
 
 async function findAlternativeRoute(polygon) {
+    console.log(polygon);
+    
     let [startLng, startLat] = document.getElementById('startPointCoords').value.split(',').map(part => parseFloat(part.trim()));
     let [endLng, endLat] = document.getElementById('endPointCoords').value.split(',').map(part => parseFloat(part.trim()));
     let startPoint = [startLat, startLng];
@@ -490,10 +492,27 @@ function handleData(routeData) {                                    // Tähän f
         console.error('Etäisyyttä ei saatu:', error);
     });
 
-    const now = new Date();                                         // Muotoillaan aika-arvio
+    const now = new Date();
     currentHour = now.getHours();
     currentMinute = now.getMinutes();
-    console.log('Matka kestää', timeEstimate, 'Jos lähdet nyt, olet perillä', (currentHour + hours) + ':' + (currentMinute + minutes) + '.');
+    
+    let etaHours = currentHour + hours;
+    let etaMinutes = currentMinute + minutes;
+
+    if (etaMinutes >= 60) {
+        etaHours += Math.floor(etaMinutes / 60);
+        etaMinutes = etaMinutes % 60;
+    }
+    
+    if (etaHours >= 24) {
+        etaHours = etaHours % 24;
+    }
+
+    if (etaMinutes < 10) {
+        etaMinutes = `0${etaMinutes}`;
+    }
+
+    console.log('Matka kestää', timeEstimate, 'Jos lähdet nyt, olet perillä', etaHours + ':' + etaMinutes + '.');
     
     return routeData.geometry;
 }

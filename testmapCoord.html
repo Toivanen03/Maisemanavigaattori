@@ -17,71 +17,43 @@
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
-        var map = L.map('map').setView([61.23534, 26.04032], 13);
+        let data = localStorage.getItem("Polygon");
+        let coordinates = []
+        coordinates.push(...JSON.parse(data))
+
+        var map = L.map('map').setView([61.21, 26.04], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19
         }).addTo(map);
-        
-        const coordinates = [           // Polygoni vältettävistä koordinaateista reitillä ABC Heinola - Citymarket Heinola
-            [26.04548, 61.23388],
-            [26.04579, 61.23337],
-            [26.04692, 61.23297],
-            [26.04832, 61.23348],
-            [26.04842, 61.23356],
-            [26.0484, 61.23365],
-            [26.04824, 61.23371],
-            [26.04594, 61.23472],
-            [26.04448, 61.23541],
-            [26.04185, 61.23665],
-            [26.04163, 61.23665],
-            [26.041, 61.23629],
-            [26.04083, 61.23605],
-            [26.04082, 61.23584],
-            [26.0144, 61.21885],
-            [26.01356, 61.21827],
-            [26.0128, 61.21773],
-            [26.01171, 61.21692],
-            [26.00887, 61.21458],
-            [26.00713, 61.21293],
-            [26.00552, 61.21111],
-            [26.00512, 61.21063],
-            [26.0048, 61.21019],
-            [26.00425, 61.20929],
-            [26.00387, 61.20856],
-            [26.0034, 61.20752],
-            [26.00318, 61.20677],
-            [26.00316, 61.20668],
-            [26.003, 61.20573],
-            [26.00293, 61.20496],
-            [26.00294, 61.20411],
-            [26.00301, 61.20344],
-            [25.99762, 61.19396],
-            [25.99726, 61.19385],
-            [25.99738, 61.19338],
-            [25.99777, 61.19338],
-            [25.99846, 61.19341],
-            [25.99948, 61.19348],
-            [25.99526, 61.19185],
-            [25.9984, 61.19222],
-            [26.00058, 61.19411],
-            [26.00102, 61.19451],
-            [26.00126, 61.19482],
-            [26.00142, 61.19514],
-            [26.00163, 61.19596],
-            [26.00174, 61.19643],
-            [26.00172, 61.19711],
-            [26.0381, 61.2313],
-            [26.03866, 61.23187],
-            [26.03896, 61.23238],
-            [26.03905, 61.23283],
-            [26.03903, 61.23311],
-            [26.04379, 61.23137],
-            [26.04419, 61.23163],
-            [26.04348, 61.23188],
-            [26.04548, 61.23388]
-        ];
+        console.log(coordinates)
         var polyline = L.polyline(coordinates, {color: 'blue'}).addTo(map);
         map.fitBounds(polyline.getBounds());
+
+        function checkWindingOrder(coords) {
+            let area = 0;
+            for (let i = 0; i < coords.length - 1; i++) {
+                area += coords[i][0] * coords[i + 1][1];
+                area -= coords[i + 1][0] * coords[i][1];
+            }
+
+            area += coords[coords.length - 1][0] * coords[0][1];
+            area -= coords[0][0] * coords[coords.length - 1][1];
+            
+            return area > 0 ? "Counter-clockwise" : "Clockwise";
+        }
+
+    console.log(checkWindingOrder(coordinates));
+
+    function cleanCoordinates(rawData) {
+    const coordinates = rawData.split('\n')
+        .map(line => {
+            const match = line.match(/\[(\d+\.\d+),\s*(\d+\.\d+)\]/);
+            return match ? [parseFloat(match[1]), parseFloat(match[2])] : null; // Return the coordinate pair or null if no match
+        })
+        .filter(coord => coord !== null);
+
+    return coordinates;
+}
     </script>
 
 </body>
