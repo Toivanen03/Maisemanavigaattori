@@ -31,6 +31,8 @@ loginIconDiv.addEventListener('click', function() {
 }
 });
 
+
+
 // Muutama testikäyttäjä
 const users = [
   {

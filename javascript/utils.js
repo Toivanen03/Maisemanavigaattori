@@ -97,7 +97,6 @@ document.addEventListener('click', function(event) {
 document.getElementById('toggle-maisema').addEventListener('click', function(event) {
     maisemaSwitch.classList.toggle('hide');
     switchText.classList.toggle('hide');
-    
     event.stopPropagation();
 });
 
@@ -127,28 +126,17 @@ document.getElementById('fullscreen-toggle').addEventListener('click', function(
 });
 
 
-// Estetään mapin klikkaus sivuvalikossa
-document.querySelector('.menu').addEventListener('click', function(event) {
-    event.stopPropagation();
-});
-
-// Sama reitinhakuboxille
-document.querySelector('.search').addEventListener('click', function(event) {
-    event.stopPropagation();
-});
-
 
 // Reitin haun jälkeen hakukenttä pois näkyvistä
 findRouteButton.addEventListener('click', () => {
     const startPoint = startPointInput.value;
     const endPoint = endPointInput.value;
     if (startPoint && endPoint) {
-        searchDiv.style.display = 'none';
+        searchDiv.classList.add('hide');
     }
 });
 
-
-// Suljetaan muita valikoita
+// Suljetaan login ja info jos klikataan hakua
 searchRoute.addEventListener('click', (event) => {
     if (!loginForm.classList.contains('hide')) {
         loginForm.classList.add('hide');
@@ -157,9 +145,10 @@ searchRoute.addEventListener('click', (event) => {
         infoDiv.classList.add('hide');
     }
     searchDiv.classList.toggle('hide');
+    
 });
 
-
+// Sama infolle, suljetaan login tai haku jos ne on auki
 toggleInfo.addEventListener('click', (event) => {
     if (loginForm && !loginForm.classList.contains('hide')) {
         loginForm.classList.add('hide');
@@ -169,7 +158,5 @@ toggleInfo.addEventListener('click', (event) => {
     }
     infoDiv.classList.toggle('hide');
 });
-
-
 
 

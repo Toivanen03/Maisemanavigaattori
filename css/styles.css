@@ -214,7 +214,7 @@ button:hover {
 }
 
 .leaflet-top {
-    position: static;
+    position: absolute;
     top: 10px !important;
     right: 7px !important;
 }
@@ -319,7 +319,7 @@ input:checked + .slider:before {
 }
 
 .hide {
-    display: none;
+    display: none !important;
 }
 
 #login-form{
@@ -609,15 +609,15 @@ input:checked + .slider:before {
 
     .search {
         position: absolute;
-        left: 40px;
+        left: 38px;
         width: 300px;
         max-width: 90%;
-        top: 30%;
+        top: 50px;
         transform: translateX(-50%);
-        opacity: 0;
         animation: slideInFromBottom 0.5s forwards ease-out;
         padding: 0;
         margin: 0;
+        text-align: center;
     }
 
     .search-top{
@@ -638,12 +638,18 @@ input:checked + .slider:before {
 
     .leaflet-bottom{
         position: static;
+        left: 10px;
+       
     }
     
     .leaflet-top {
         position: absolute;
-        top: 50px !important;
+        top: 0px;
+       
     }
+
+
+    
 
     @keyframes slideInFromBottom {
         0% {
