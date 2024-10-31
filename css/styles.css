@@ -611,7 +611,7 @@ input:checked + .slider:before {
 
     .search {
         position: absolute;
-        left: 38px;
+        left: 36px;
         width: 300px;
         max-width: 90%;
         top: 50px;
@@ -620,6 +620,7 @@ input:checked + .slider:before {
         padding: 0;
         margin: 0;
         text-align: center;
+        z-index: 2000;
     }
 
     .search-top{
@@ -641,14 +642,17 @@ input:checked + .slider:before {
     .leaflet-bottom{
         position: static;
         left: 10px;
-       
     }
     
     .leaflet-top {
         position: absolute;
         top: 0px;
-       
     }
+    #login-form{
+        top: 250px;
+        z-index: 2001;
+    }
+
     #settings-menu{
         width:250px;
         top: 250px;
