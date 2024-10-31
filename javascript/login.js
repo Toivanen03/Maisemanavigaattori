@@ -1,6 +1,6 @@
 // Pyykkönen
 // Käyttäjän kirjautumista ja mahdollista erillistä valikkoa kirjautuneelle käyttäjälle
-console.log('Tunnukset = placeholder');
+console.log('Tunnukset = admin, pass | user1, pass1 | user2, pass2');
 
 // Muuttujat
 const loginForm = document.getElementById('login-form');
