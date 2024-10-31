@@ -13,24 +13,6 @@ const settingsMenu = document.getElementById('settings-menu');
 const settingsList = document.getElementById('settings-list');
 const settingsIcon = document.getElementById('settings');
 const searchDiv = document.querySelector('.search');
-const toggleInfo = document.getElementById('toggle-info');
-const infoDiv = document.getElementById('info');
-
-
-// Kirjautuminen ikonista
-loginIconDiv.addEventListener('click', function() {
-  document.getElementById('login-form').classList.toggle('hide');
-  
-  // Jos searchDiv näkyvissä
-  if (!searchDiv.classList.contains('hide')) {
-      searchDiv.classList.add('hide');
-  }
-  // Jos infoDiv näkyvissä
-  if (!infoDiv.classList.contains('hide')) {
-    infoDiv.classList.add('hide');
-}
-});
-
 
 
 // Muutama testikäyttäjä
@@ -77,7 +59,7 @@ loginFormElement.addEventListener('submit', function(event) {
     console.log(`Käyttäjän rooli: ${user.role}`);
     usernameDisplay.innerHTML = `Kirjautuneena: ${user.name} ${user.lastName}<br>Rooli: ${user.role}`;
     usernameDisplay.classList.remove('hide');
-    document.getElementById('settings').style.display = 'flex';
+    settingsIcon.style.display = 'flex';
     // Asetusvalikko näkyviin käyttäjän roolin mukaan
     displaySettingsMenu(user.role);
 } else {
@@ -94,8 +76,9 @@ loginFormElement.addEventListener('submit', function(event) {
     }, 1000);
 }
 });
-// Toggle asetus-kuvakkeelle
-document.getElementById('settings').addEventListener('click', function() {
+
+// Toggle kirjautuneen käyttäjän asetus-kuvakkeelle
+settingsIcon.addEventListener('click', function() {
   settingsMenu.classList.toggle('hide');
 });
 
@@ -135,7 +118,7 @@ function displaySettingsMenu(role) {
     settingsMenu.classList.add('hide');
   });
 
-  // Kaikelle yhteiset asetukset
+  // Kaikille yhteiset asetukset
   const commonSettings = [
     'Muokkaa profiilia',
     'Vaihda salasana',
@@ -143,7 +126,7 @@ function displaySettingsMenu(role) {
     'Tuki'
   ];
 
- 
+
   commonSettings.forEach(setting => {
     const li = document.createElement('li');
     li.textContent = setting;
@@ -165,8 +148,6 @@ function displaySettingsMenu(role) {
     });
   }
 
-  
   settingsList.appendChild(closeButton);
   settingsMenu.classList.remove('hide');
 }
-

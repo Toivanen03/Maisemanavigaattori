@@ -282,11 +282,13 @@ input:checked + .slider:before {
     transform: translateX(-50%);
     width: 800px;
     max-width: 70%;
+    max-height: 90%;
     z-index: 1005;
     background-color: rgba(0, 0, 0, 0.8);
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
+
 
 .video-container video {
     width: 100%;
@@ -647,8 +649,11 @@ input:checked + .slider:before {
         top: 0px;
        
     }
-
-
+    #settings-menu{
+        width:250px;
+        top: 250px;
+        font-size: smaller;
+    }
     
 
     @keyframes slideInFromBottom {
@@ -674,13 +679,13 @@ input:checked + .slider:before {
         height: 75vh;
     }
     #login-form{
-        width: 300px;
-        height: 320px;
+        width: 250px;
+        height: 300px;
         top: 200px;
     }
 
     .video-container {
-        top: 100px;
+        top: 50px;
     }
     
     .overlay-text {
@@ -693,7 +698,11 @@ input:checked + .slider:before {
         width: 250px;
         height: auto;
     }
-
+    #settings-menu{
+        width:250px;
+        top: 250px;
+        font-size: smaller;
+    }
     
 
  

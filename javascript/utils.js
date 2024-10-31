@@ -14,7 +14,10 @@ const searchDiv = document.querySelector('.search');
 const loginForm = document.getElementById('login-form');
 const toggleInfo = document.getElementById('toggle-info');
 const infoDiv = document.getElementById('info');
-const testSettingsDiv = document.getElementById('test-settings');
+const settingsMenu = document.getElementById('settings-menu');
+const routingIcon = document.getElementById('routing-icon');
+const modeBox = document.getElementById('mode-box');
+const loginIconDiv = document.getElementById('login-icon');
 
 
 // Haetaan herestä osoitteet
@@ -112,7 +115,7 @@ document.getElementById('maisema-checkbox').addEventListener('change', function(
     setTimeout(() => {
         switchText.classList.toggle('hide');
         maisemaSwitch.classList.toggle('hide');
-    }, 1000);
+    }, 1500);
 });
 
 
@@ -126,37 +129,47 @@ document.getElementById('fullscreen-toggle').addEventListener('click', function(
 });
 
 
+// Funktio valikoiden näkyvyydelle
+function toggleVisibility(targetDiv, ...divsToHide) {
+    divsToHide.forEach(div => {
+        if (!div.classList.contains('hide')) {
+            div.classList.add('hide');
+        }
+    });
+    targetDiv.classList.toggle('hide');
+}
 
 // Reitin haun jälkeen hakukenttä pois näkyvistä
 findRouteButton.addEventListener('click', () => {
     const startPoint = startPointInput.value;
     const endPoint = endPointInput.value;
     if (startPoint && endPoint) {
-        searchDiv.classList.add('hide');
+        toggleVisibility(searchDiv);
     }
 });
 
-// Suljetaan login ja info jos klikataan hakua
+// Suljetaan muut, jos klikataan hakua
 searchRoute.addEventListener('click', (event) => {
-    if (!loginForm.classList.contains('hide')) {
-        loginForm.classList.add('hide');
+    toggleVisibility(searchDiv, loginForm, infoDiv,settingsMenu,modeBox);
+});
+
+// Infolle sama
+toggleInfo.addEventListener('click', (event) => {
+    toggleVisibility(infoDiv, loginForm, searchDiv, settingsMenu,modeBox);
+});
+
+// Reititystavan valintaboxille sama
+routingIcon.addEventListener('click', () => {
+    toggleVisibility(modeBox, infoDiv, loginForm, searchDiv, settingsMenu);
+});
+
+// Kirjautumiseen 
+loginIconDiv.addEventListener('click', () => {
+    if (!searchDiv.classList.contains('hide')) {
+        searchDiv.classList.add('hide');
     }
     if (!infoDiv.classList.contains('hide')) {
         infoDiv.classList.add('hide');
     }
-    searchDiv.classList.toggle('hide');
-    
+    toggleVisibility(loginForm);
 });
-
-// Sama infolle, suljetaan login tai haku jos ne on auki
-toggleInfo.addEventListener('click', (event) => {
-    if (loginForm && !loginForm.classList.contains('hide')) {
-        loginForm.classList.add('hide');
-    }
-    if (searchDiv && !searchDiv.classList.contains('hide')) {
-        searchDiv.classList.add('hide');
-    }
-    infoDiv.classList.toggle('hide');
-});
-
-
