@@ -1,5 +1,5 @@
 <!DOCTYPE html>             <!-- TÄMÄ KARTTA ON VAIN TESTAUSKÄYTTÖÖN EIKÄ KUULU LOPULLISEEN OHJELMAAN -->
-<html lang="en">
+<html lang="fi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,14 +18,29 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
         let data = localStorage.getItem("Polygon");
-        let coordinates = []
-        coordinates.push(...JSON.parse(data))
+        let coordinatesList = [];
+        let coordinates = [];
 
+        coordinatesList.push(...JSON.parse(data));
+
+        function flipCoordinates(coords) {
+            return coords.map(coord => {
+                const [lng, lat] = coord;
+                return [lat, lng];
+            });
+        }
+        for (let i = 0; i < coordinatesList.length; i++) {
+            coordinates.push(flipCoordinates(coordinatesList[i]));
+        }
+
+        console.log('TÄMÄ KARTTA ON VAIN TESTAUSKÄYTTÖÖN EIKÄ KUULU LOPULLISEEN OHJELMAAN');
+        console.log(checkWindingOrder(coordinates));
+        console.log(coordinates);
+        
         var map = L.map('map').setView([61.21, 26.04], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19
         }).addTo(map);
-        console.log(coordinates)
         var polyline = L.polyline(coordinates, {color: 'blue'}).addTo(map);
         map.fitBounds(polyline.getBounds());
 
@@ -39,21 +54,8 @@
             area += coords[coords.length - 1][0] * coords[0][1];
             area -= coords[0][0] * coords[coords.length - 1][1];
             
-            return area > 0 ? "Counter-clockwise" : "Clockwise";
+            return area > 0 ? "Clockwise" : "Counter-clockwise";
         }
-
-    console.log(checkWindingOrder(coordinates));
-
-    function cleanCoordinates(rawData) {
-    const coordinates = rawData.split('\n')
-        .map(line => {
-            const match = line.match(/\[(\d+\.\d+),\s*(\d+\.\d+)\]/);
-            return match ? [parseFloat(match[1]), parseFloat(match[2])] : null; // Return the coordinate pair or null if no match
-        })
-        .filter(coord => coord !== null);
-
-    return coordinates;
-}
     </script>
 
 </body>

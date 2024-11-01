@@ -307,6 +307,38 @@ input:checked + .slider:before {
     z-index: 2;
     width: 100%;
 }
+
+.loading-text {
+    padding: 20px;
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    font-size: 20px;
+    text-align: center;
+    z-index: 2;
+    width: 100%;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+@keyframes dots {
+    0% { content:   ""; }
+    20% { content:  "."; }
+    40% { content:  ".."; }
+    60% { content:  "..."; }
+    80% { content:  "...."; }
+    100% { content: "....."; }
+}
+
+.loading-text::after {
+    position: absolute;
+    content: "";
+    margin-left: 5px;
+    animation: dots 1.5s steps(5, end) infinite;
+}
+
 #removeRoutes{
     position: absolute;
     top: 20px;
