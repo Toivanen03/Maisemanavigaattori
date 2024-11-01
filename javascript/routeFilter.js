@@ -3,10 +3,12 @@ import { setVerifiedByShortRoute } from './main.js';                        // a
 import { setVerifiedByCoordinates } from './main.js';
 import { getSceneryRouting } from './main.js';                              // True tai false sen mukaan, onko maisemahaku valittuna
 import { updatePolygon } from './main.js';                                  // Funktio asettaa haetun polygonin muuttujaan
+import { findAlternativeRoute } from './main.js';                           // Tuodaan reitin varmistamiseksi
 import { calculateDistance } from './main.js';                              // Funktio, joka laskee koordinaattipisteiden etäisyyksiä
 import { devMode } from './main.js';                                        // True tai false sen mukaan, onko DevMode valittuna
 import { datafile } from './main.js';                                       // Reittidatatiedostot, joita käytetään DevModessa
 import { loading } from './main.js';                                        // Lataustekstin kenttä
+import { routeConfirmed } from './main.js';                                 // Tieto reitin lopullisesta vahvistamisesta
 export let defaultLat, defaultLng;                                          // DevModen oletuskoordinaatit lasketaan getArea-funktiossa
 
 //  REITTI- JA ALUELASKENTAMUUTTUJAT
@@ -15,10 +17,11 @@ let filteredWaysCoords = [];                                                // S
 let originalRoute;                                                          // URL-haun reittidata
 let firstCoords;                                                            // Ensimmäisen reittihaun koordinaatit
 let routeArea;                                                              // Hakualueen äärikoordinaatit
-let inArea = false;                                                         // True tai false, käytetään vähentämään Overpass-hakuja
+let inArea;                                                                 // True tai false, käytetään vähentämään Overpass-hakuja
 let routeFilter;                                                            // Overpass-parametrit
 let testmapWindow;      // ----- //                                         // Käytetään testausvaiheessa
 let testCount = 0;                                                          // Tieto hakujen määrästä. Käytetään hakujen rajaamiseksi ja apuna reittitarkistuksissa
+export let firstLoad = false;                                               // Käytetään apumuuttujana sivun latauksen yhteydessä aloituskoordinaattien kääntämiseksi
 let centerLat, centerLon;                                                   // Overpass-suodattimen keskipiste
 let radius;                                                                 // Overpass-suodattimen hakualueen säde
 export let bounds;                                                          // Reittihakualueen rajat, lasketaan haettavan reitin äärikoordinaattien perusteella
@@ -37,6 +40,22 @@ export function getTestCount() {                                            // H
 
 export function setTestCount() {
     testCount += 1;
+}
+
+export function resetTestCount() {
+    testCount = 0;
+}
+
+export function clearFilteredWays() {
+    filteredWaysCoords = [];
+}
+
+export function setInArea(value) {
+    inArea = value;
+}
+
+export function setRouteArea(area) {
+    routeArea = area;
 }
 
 
@@ -90,8 +109,8 @@ async function fetchOverpassData() {                        // Hakee sallitut re
             throw new Error(`Verkkovirhe: ${response.status}`);
         }
         const data = await response.json();
-        filteredWays = data.elements;                       // Asetetaan palvelimelta saadut sallitut reitit muuttujaan
-        await handleFilteredWays(filteredWays);             // Asettaa vastaanotetun datan koordinaatit listaan
+        filteredWays = data.elements;                                   // Asetetaan palvelimelta saadut sallitut reitit muuttujaan
+        filteredWaysCoords = await handleFilteredWays(filteredWays);    // Asettaa vastaanotetun datan koordinaatit listaan
     } catch (error) {
         console.error('Virhe:', error);
     }
@@ -116,9 +135,10 @@ async function handleFilteredWays(filteredWays) {
 
 
 
-async function getArea(coords) {                        // Hakee koordinaattien ääripisteet. Funktiota käytetään sallittujen
+export async function getArea(coords) {                 // Hakee koordinaattien ääripisteet. Funktiota käytetään sallittujen
     const latitudes = coords.map(coord => coord[0]);    // teiden listan muodostamiseksi dynaamisesti sekä tiedoston mukaisen
     const longitudes = coords.map(coord => coord[1]);   // alueen ääripisteiden laskemiseksi
+
     bounds = {
         maxLat: Math.max(...latitudes),                 // Alueen äärikoordinaatit
         minLat: Math.min(...latitudes),
@@ -148,16 +168,21 @@ export async function callForVerify(geojsonData) {  // "Juurifunktio" reittihaul
     console.log('Reitin käsittely aloitettu'); 
     if (getTestCount() === 0) {                     // Arvo on 0, kun reittihaku käynnistetään klikkaamalla reittihakupainiketta.
         originalRoute = geojsonData;                // Uuden haun yhteydessä getRoute-funktion url-haun reitti tallennetaan.
-        firstCoords = [];
+        firstLoad = true;
     }
+    
+    if (!inArea) {
+        firstCoords = [];
         centerLon = (geojsonData.coordinates[0][0] + geojsonData.coordinates[geojsonData.coordinates.length -1][0]) / 2;    // Lasketaan reittikoordinaateista alueen keskipiste.
         centerLat = (geojsonData.coordinates[0][1] + geojsonData.coordinates[geojsonData.coordinates.length -1][1]) / 2;    // Tarvitaan sallittujen reittien suodattamiseksi.
 
         geojsonData.coordinates.forEach((coordinate) => {           // Reittikoordinaatit tallennetaan listaan. Tarvitaan hakualueen ääripisteiden määrittelyyn.
             firstCoords.push([coordinate[1], coordinate[0]]);
         });
+
         routeArea = await getArea(firstCoords)                      // Laskee alkuperäisen reitin äärikoordinaatit.
-        radius = await calculateDistance('getArea', [routeArea.minLat, routeArea.minLng], [routeArea.maxLat, routeArea.minLng]) * 2; // Laskee suodatusalueen säteen
+        radius = await calculateDistance('getArea', [routeArea.minLat, routeArea.minLng], [routeArea.maxLat, routeArea.minLng]) * 2; // Laskee suodatusalueen säteen ja kertoo kahdella
+    }
         if (filteredWaysCoords.length === 0) {
             await fetchOverpassData();                              // Noutaa sallitut reitit, eli Overpass Turbo API:n suodattaman datan
         }
@@ -168,7 +193,11 @@ export async function callForVerify(geojsonData) {  // "Juurifunktio" reittihaul
 
 
 async function filterCoordsToAvoid(geojsonData) {               // Koordinaattien muunnos vertailukelpoiseen muotoon sekä keskinäinen vertailu
-    loading.innerText = 'Suodatetaan reittidataa';
+    if (testCount === 0) {
+        loading.innerText = 'Suodatetaan reittidataa';
+    } else {
+        loading.innerText = 'Vahvistetaan koordinaatteja';
+    }
     console.log('Suodatetaan koordinaatteja'); 
     let routeCoords = [];
     if (geojsonData && geojsonData.coordinates) {               // Alkuperäisen reittihaun koordinaatit puretaan listaan
@@ -178,7 +207,7 @@ async function filterCoordsToAvoid(geojsonData) {               // Koordinaattie
         if (!devMode) {
             if (getSceneryRouting()) {                          // Ohitetaan, mikäli maisemahaku ei ole valittuna. Nopeuttaa prosessointia.
                 if (filteredWaysCoords.length === 0) {
-                    console.log('Sallittujen reittien lista tyhjä, kutsutaan alueen laskentaa ja Overpass -hakua')
+                    console.log('Sallittujen reittien lista tyhjä, kutsutaan alueen laskentaa ja Overpass -hakua');
                     await getArea(routeCoords);                 // Laskee alkuperäisen reitin äärikoordinaatit, joista määritellään alueen keskipiste uutta hakua varten
                     await fetchOverpassData();                  // Kun alueen keskipiste ja koko on saatu, haetaan saaduilla arvoilla data hyväksytyistä teistä.
                 }
@@ -194,9 +223,11 @@ async function filterCoordsToAvoid(geojsonData) {               // Koordinaattie
     function coordToString(coord) {                                 // Vertaillaan kolmea ensimmäistä desimaalia, mutta
         return `${coord[0].toFixed(3)},${coord[1].toFixed(3)}`;     // koordinaatit kuitenkin tallennetaan täydellä tarkkuudella
     }
+
     let validCoords = [];
     let coordsToAvoid = [];
     const filteredCoordsSet = new Set(filteredWaysCoords.map(coord => coordToString(coord)));
+
     routeCoords.forEach(coord => {                              // Reittihaun koordinaattien vertailu sallittujen reittien listaan...
         if (filteredCoordsSet.has(coordToString(coord))) {
             validCoords.push(coord);                            // ...luo kelvollisten...
@@ -214,7 +245,11 @@ async function filterCoordsToAvoid(geojsonData) {               // Koordinaattie
     } else if (!getVerifiedByScenery()) {       // Ohjelman suoritus jatkuu, mikäli aiempi koordinaattivertailu validien ja epäkelpojen koordinaattien
         setVerifiedByShortRoute(false);         // välillä ei täytä ehtoja.
         setVerifiedByCoordinates(false);
-        loading.innerText = `Haetaan uutta reittiä, kelpoja koordinaatteja ${((validCoords.length / routeCoords.length) * 100).toFixed(0)}%`;
+        if (testCount === 0) {
+            loading.innerText = `Haetaan uutta reittiä, kelpoja koordinaatteja ${((validCoords.length / routeCoords.length) * 100).toFixed(0)}%`;
+        } else {
+            loading.innerText = 'Hetki vielä';
+        }
         console.log(`Haetaan uutta reittiä, kelpoja koordinaatteja ${((validCoords.length / routeCoords.length) * 100).toFixed(0)}%`);
         await flipCoordinates(coordsToAvoid);
     }
@@ -257,8 +292,9 @@ async function preparePolygon(coordsToAvoid) {                              // M
 
 
 async function rawFilterRotation(coordsToAvoid) {               // Tarkistaa koordinaattilistan kiertosuunnan ja kääntää tarvittaessa
-    let firstCoordAtStart = coordsToAvoid[0];
-    let firstCoordAtEnd; 
+    if (testCount !== 0) {
+        loading.innerText = 'Varmistetaan dataa';
+    }
     let area = 0;
     for (let i = 0; i < coordsToAvoid.length - 1; i++) {        // Lasketaan alue ns. shoelace -kaavalla (Gaussin aluekaava), eli yksinkertaisesti
         area += coordsToAvoid[i][0] * coordsToAvoid[i + 1][1];  // Area = (1/2) * | ∑(x_i * y_(i+1) - y_i * x_(i+1)) |
@@ -271,7 +307,7 @@ async function rawFilterRotation(coordsToAvoid) {               // Tarkistaa koo
         coordsToAvoid.reverse();
         console.log('Polygonin kiertosuunta käännetty');
     } else {
-        console.log(`Polygonin kiertosuunta tarkistettu, ${isCounterClockwise ? 'vastapäivään.' : 'myötäpäivään.'}`);
+        console.log('Polygonin kiertosuunta tarkistettu, vastapäivään.');
     }
 
     coordsToAvoid = coordsToAvoid.slice(coordsToRemove, -coordsToRemove);   // Poistetaan alusta ja lopusta koordinaatteja (varmistaa liikkeellepääsyn esimerkiksi parkkipaikalta
@@ -365,9 +401,15 @@ async function createPolygon(coordsToAvoid) {           // Muotoilee ja palautta
     const polygon = formatPolygon(coordsToAvoid);
     setVerifiedByShortRoute(false);                     // Asetetaan oikea reittityyppi löydetyksi
     setVerifiedByCoordinates(false);
-    setVerifiedByScenery(true);
-    updatePolygon(polygon);                             // Tallettaa polygonin muuttujaan, joka on main.js- funktion findAlternativeRoute löydettävissä
-    saveRoute(polygon.coordinates)                      // Testausta varten
+    if (routeConfirmed) {
+        setVerifiedByScenery(true);
+        saveRoute(polygon.coordinates);                 // Testausta varten
+    }
+    if (testCount === 1) {
+        updatePolygon(polygon);                         // Tallettaa polygonin muuttujaan, joka on main.js- funktion findAlternativeRoute löydettävissä
+    } else {
+        await findAlternativeRoute(polygon, originalRoute);
+    }
 }
 
 
