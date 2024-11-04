@@ -30,8 +30,8 @@ export let bounds;                                                          // R
 const radiusMultiplier = 2.5;                                               // Kertoimella voidaan säätää Overpass-suodatuksen alueen kokoa
 const margin = 0.00005;                                                     // Koordinaattien välistysmarginaali
 const coordPercentToAccept = 90;                                            // Prosenttiluku määrittelee, kuinka suuri osa koordinaateista täytyy hyväksyä
-const coordsToRemove = 5;                                                   // Koordinaattilistan alusta ja lopusta leikattava koordinaattimäärä
 const coordSpacingPercent = 2;                                              // Marginaaliarvo, jota käytetään leikkauspisteiden tarkistuksessa
+let coordsToRemove;                                                         // Koordinaattilistan alusta ja lopusta leikattava koordinaattimäärä
 
 
 export function getTestCount() {                                            // Hakulaskurin getter ja setter
@@ -126,7 +126,7 @@ async function handleFilteredWays(filteredWays) {
             filteredWaysCoords.push([coordinate.lat, coordinate.lon]);              
         });
     });
-    if (getTestCount() !== 0) {
+    if (getTestCount() !== 0 || devMode) {
         routeArea = await getArea(filteredWaysCoords);      // ...minkä jälkeen koordinaateista etsitään ääripisteet.
     }
     return filteredWaysCoords;
@@ -156,8 +156,9 @@ export async function getArea(coords) {                 // Hakee koordinaattien 
     let horizontalDiameter = await calculateDistance('getArea', [bounds.minLat, bounds.minLng], [bounds.minLat, bounds.maxLng]);
 
     let diameter = Math.max(verticalDiameter, horizontalDiameter);      // CalculateDistance laskee alueen halkaisijan, jonka
-    radius = parseFloat((diameter / 2) * radiusMultiplier).toFixed(0);  // perusteella lasketaan suodatuksessa tarvittava sädeluku
-    console.log(`Ääripisteet laskettu, alueen säde ${(radius / 1000).toFixed(0)} kilometriä`);
+    radius = ((parseFloat((diameter / 2) * radiusMultiplier)) / 1000).toFixed(0);  // perusteella lasketaan suodatuksessa tarvittava sädeluku
+    coordsToRemove = radius * 0.75;
+    console.log(`Ääripisteet laskettu, alueen säde ${radius} kilometriä`);
     return bounds;
 }
 

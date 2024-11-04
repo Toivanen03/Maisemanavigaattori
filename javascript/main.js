@@ -131,7 +131,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     document.getElementById('endPoint').addEventListener('blur', function() {
         map.dragging.enable();
+        if (endMarker.getLatLng().lat.toFixed(5) + ',' + endMarker.getLatLng().lng.toFixed(5) !== endCoords.value) {
         checkAddress('end');
+        }
     });
 
     document.getElementById('findRoute').addEventListener('click', function() {             // Reittihakupainikkeen kuuntelu
@@ -295,6 +297,8 @@ function removeRoute() {                                                // Poist
 
 
 window.handlePermission = function(reply) {                                     // Funktiota kutsutaan HTML-koodin sijaintilupakyselypainikkeilla
+    let defLat = 61.12;
+    let defLng = 25.00;
     document.getElementById('locationQueryBox').style.display = 'none';
     if (reply === true) {                                                       // Painikkeilta välittyy true tai false
         currentMarkerType = 'end';
@@ -311,39 +315,39 @@ window.handlePermission = function(reply) {                                     
                 });
             },
             function(error) {                       // Jos sijaintia ei saada, siitä kerrotaan käyttäjälle, asetetaan oletussijainti ja tulostetaan virhe
-                locationError(error);
+                locationError(defLat, defLng, error);
             });
     } else {                                        // Jos sijaintilupaa ei myönnetä, siitä kerrotaan käyttäjälle ja asetetaan oletussijainti
-        handlePermissionDenied(null);
-        locationError(null);
+        handlePermissionDenied(defLat, defLng, null);
     }
 }
 
 
 
 
-window.handlePermissionDenied = function(parameter) {// Huolehtii viestilaatikon näytöstä tilanteessa, jossa käyttäjä on estänyt sijainnin
+window.handlePermissionDenied = function(defLat, defLng, parameter) {// Huolehtii viestilaatikon näytöstä tilanteessa, jossa käyttäjä on estänyt sijainnin
     document.getElementById('permissionDeniedBox').style.display = 'block';
-    if (parameter === 'close') {
+    if (parameter) {
         document.getElementById('permissionDeniedBox').style.display = 'none';
+        locationError(defLat, defLng);
     }
 }
 
 
 
 
-function locationError(error) {                 // Funktio määrittelee viestin saamansa parametrin perusteella. Jos todellinen virhe sijaintihaussa tapahtuu,
+function locationError(defLat, defLng, error) { // Funktio määrittelee viestin saamansa parametrin perusteella. Jos todellinen virhe sijaintihaussa tapahtuu,
     let errorMessage;                           // näytetään eri viesti kuin tilanteessa, jossa käyttäjä on estänyt sijainnin jakamisen. Oletusosoitteen haku
-    drawMap(defaultLat, defaultLng, 18);        // ja markerin asettaminen tapahtuvat tässä funktiossa (paitsi DevModessa).
-    startCoords.value = `${defaultLat}, ${defaultLng}`;
-    reverseGeocode(defaultLat, defaultLng, function(address) {
+    drawMap(defLat, defLng, 25);                // ja markerin asettaminen tapahtuvat tässä funktiossa (paitsi DevModessa).
+    startCoords.value = `${defLat}, ${defLng}`;
+    reverseGeocode(defLat, defLng, function(address) {
         startAddress.value = "Oletussijainti";
         if (error != null) {
             errorMessage = `${address}<br><div style="text-align: center;"><i>(Virhe sijainnin hakemisessa: ${error})</i></div>`;
         } else {
             errorMessage = `${address}<br><div style="text-align: center;"><i>(Sijaintilupaa ei myönnetty.)</i></div>`;
         }
-        startMarker = L.marker([defaultLat, defaultLng]).addTo(map).bindPopup(errorMessage).openPopup();
+        startMarker = L.marker([defLat, defLng]).addTo(map).bindPopup(errorMessage).openPopup();
     })
 }
 
@@ -452,6 +456,7 @@ async function getRoute(startLat, startLng, endLat, endLng) {           // Reiti
         } catch(err) {                                                  // Tulostetaan virhe konsoliin, mikäli ensimmäinen reittihaku epäonnistuu (palvelinvirhe)
             console.error('Virhe:', err);
             alert('Yhteysvirhe. Yritä uudelleen.')
+            document.getElementById('loading').style.display = 'none';
         }
         return null;
 }
