@@ -131,9 +131,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     document.getElementById('endPoint').addEventListener('blur', function() {
         map.dragging.enable();
-        if (endMarker.getLatLng().lat.toFixed(5) + ',' + endMarker.getLatLng().lng.toFixed(5) !== endCoords.value) {
         checkAddress('end');
-        }
     });
 
     document.getElementById('findRoute').addEventListener('click', function() {             // Reittihakupainikkeen kuuntelu
