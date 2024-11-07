@@ -39,7 +39,8 @@ import { bounds } from './routeFilter.js';                                  //  
 import { defaultLat, defaultLng } from './routeFilter.js';                  //                          - Lasketaan tiedoston mukaan routeFilter-tiedostossa
 import { setRouteArea, getArea } from './routeFilter.js';                   //                          - Laskee alueen rajat
 import { setInArea } from './routeFilter.js';                               //                          - Päivittää tiedon, ollaanko aiemmin haetulla alueella
-import { firstLoad } from './routeFilter.js';                               //                          - Haetaan tieto ensimmäisestä reittihausta
+import { firstLoad, setFirstLoad } from './routeFilter.js';                 //                          - Haetaan tieto ensimmäisestä reittihausta
+import { saveRoute } from './routeFilter.js';                               //                          - Testikartta, visualisoi polygonin
 
 export function setVerifiedByShortRoute(value) {                            //                          - Päivittävät muuttujien arvoa routeFilter-tiedostosta
     verifiedByShortRoute = value;
@@ -222,11 +223,12 @@ export async function setFile(value) {
     dataFileContainer.classList.add('hidden');
     map.dragging.enable();
     await getApprovedRoutes();                                          // DevModessa kutsutaan datan latausta tiedostosta tiedoston valitsemisen jälkeen
-    [startLat, startLng] = startCoords.value.split(',').map(coord => parseFloat(coord.trim()));     // Pituus- ja leveysasteet
-    [endLat, endLng] = endCoords.value.split(',').map(coord => parseFloat(coord.trim()));
     drawMap(defaultLat, defaultLng, 13);                                // DefaultLat ja defaultLng määritellään getApprovedRoutes-kutsun yhteydessä
+    setInArea(true);
     const latLngString = `${defaultLat.toFixed(5)},${defaultLng.toFixed(5)}`;   
     startCoords.value = latLngString;
+    [startLat, startLng] = startCoords.value.split(',').map(coord => parseFloat(coord.trim()));     // Pituus- ja leveysasteet reittihaussa
+    [endLat, endLng] = endCoords.value.split(',').map(coord => parseFloat(coord.trim()));
     reverseGeocode(defaultLat, defaultLng, function(address) {          // Saatu sijainti geokoodataan käänteisesti ja asetetaan osoite tekstinsyöttökenttään ja markeriin
         startAddress.value = address;                                   // Asetetaan saatu osoite reverseGeocode-funktiossa muotoiltuna osoitesyöttökenttään
         startMarker = L.marker([defaultLat, defaultLng]).addTo(map).bindPopup(`<div style="text-align: center;"><b>Tiedoston ${datafile} keskipiste</b></div><br>${address}`).openPopup();
@@ -397,6 +399,7 @@ async function getRoute(startLat, startLng, endLat, endLng) {           // Reiti
     }
     resetTestCount();                                               // Nollataan tarkistuslaskuri
 
+    routeConfirmed = false;
     verifiedByShortRoute = false;                                   // Nollataan tieto reitin löytymisestä aina uuden haun alkaessa
     verifiedByCoordinates = false;
     verifiedByScenery = false;
@@ -427,6 +430,7 @@ async function getRoute(startLat, startLng, endLat, endLng) {           // Reiti
                         .map(([lat, lon]) => [lon, lat]);
                     data.push(first, last);
                     setRouteArea(await getArea(routeData.geometry.coordinates));
+                    setFirstLoad(true);
                 }
 
                 if (!coordsWithinBounds(startLat, startLng, endLat, endLng)) {
@@ -625,6 +629,9 @@ function handleData(routeData) {                                            // T
 
 
 function drawRoute(routeData) {                                         // Reitin piirtofunktio, asettaa reittikerroksen kartalle
+    if (routeConfirmed) {
+        saveRoute(polygon.coordinates);                                 // Testausta varten, visualisoidaan lopullinen polygoni
+    }
     let route;
     if (sceneryRouting) {                                               // Maisemahaun ollessa päällä haetaan reittidatasta muu data talteen,
         route = handleData(routeData);                                  // funktio handleData palauttaa reitin
@@ -649,7 +656,7 @@ function drawRoute(routeData) {                                         // Reiti
 
 
 
-export async function calculateDistance(caller, firstCoord, secondCoord) {  // Laskee reitin linnuntietä
+export async function calculateDistance(caller, firstCoord, secondCoord, thirdCoord = null) {  // Laskee reitin linnuntietä
     let distance;
     let coord1;
     let coord2;
@@ -658,9 +665,12 @@ export async function calculateDistance(caller, firstCoord, secondCoord) {  // L
         coord2 = endCoords.value.split(',').map(coord => parseFloat(coord.trim()))
         distance = distanceCalc(coord1, coord2);        // Jatkotoimet käsitellään paikallisesti, mikäli kutsu on tullut main.js-tiedoston funktioilta
     } else if (caller === 'getArea') {
-        coord1 = firstCoord;
-        coord2 = secondCoord;
-        return distanceCalc(coord1, coord2).toFixed(0); // Palauttaa suodatustiedostoon suodatettavan alueen halkaisijan (tarkempi selostus, kts. routeFilter.js)
+        const verticalDistance = distanceCalc(firstCoord, secondCoord);
+        const horizontalDistance = distanceCalc(firstCoord, thirdCoord);
+        return {                                        // Palauttaa suodatustiedostoon suodatettavan alueen halkaisijan (tarkempi selostus, kts. routeFilter.js)
+            verticalDiameter: verticalDistance.toFixed(0),
+            horizontalDiameter: horizontalDistance.toFixed(0)
+        };
     }
 
         function distanceCalc(coord1, coord2) {         // Laskee Haversinen kaavalla kahden koordinaattipisteen maantieteellisen etäisyyden toisistaan
