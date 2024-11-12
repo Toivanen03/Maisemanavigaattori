@@ -85,7 +85,7 @@ export function setSceneryRouting(value) {                                  //  
 window.onload = function() {                                                // Tuodaan tarvittaessa näkyviin lupakysely sijaintitiedon käyttämiseen
     navigator.permissions.query({ name: 'geolocation' })
         .then(function(permissionStatus) {                                  // Tarkistetaan, onko lupa sijainnin käyttöön annettu aiemmalla sivustokäynnillä
-            if (permissionStatus.state === 'granted') {                     
+            if (permissionStatus.state === 'granted') {       
                 handlePermission(true);
                 document.getElementById('locationQueryBox').style.display = 'none';
             } else if (permissionStatus.state === 'denied') {
@@ -114,23 +114,27 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
 
     document.getElementById('startPoint').addEventListener('focus', () => { // Asetetaan markerin tyyppi klikatun osoitekentän mukaan
+        checkIfRouteExists();
         map.dragging.disable();
         currentMarkerType = 'start';
     });
 
     document.getElementById('endPoint').addEventListener('focus', () => {
+        checkIfRouteExists();
         map.dragging.disable();
-        currentMarkerType = 'end';        
+        currentMarkerType = 'end';
     });
 
     document.getElementById('startPoint').addEventListener('blur', function() { // Tarkistetaan syöttökentän osoite
+        checkIfRouteExists();
         map.dragging.enable();                                                  // Estetään kartan raahautuminen, kun ollaan osoitteen syöttökentässä
-        if (startMarker.getLatLng().lat.toFixed(5) + ',' + startMarker.getLatLng().lng.toFixed(5) !== startCoords.value) {
+        if (startMarker && startMarker.getLatLng().lat.toFixed(5) + ',' + startMarker.getLatLng().lng.toFixed(5) !== startCoords.value) {
             checkAddress('start');      // If-lauseen tarkistus estää markereiden hyppimisen. Tämä välttämätöntä, koska myös pistettä kartalta valitessa
         }                               // markerin tyyppi valitaan syöttökenttää klikkaamalla. Ilman tarkistusta lähtee tuplakutsu markereiden asettamiselle.
     });
 
     document.getElementById('endPoint').addEventListener('blur', function() {
+        checkIfRouteExists();
         map.dragging.enable();
         checkAddress('end');
     });
@@ -155,6 +159,19 @@ document.addEventListener('DOMContentLoaded', async function() {
         removeRoute();
     });
 });
+
+
+
+
+function checkIfRouteExists() {
+    if (currentRouteLayer) {
+        if (currentMarkerType === 'end') {
+            removeRoute('start');
+        } else if (currentMarkerType === 'start') {
+            removeRoute('end');
+        }
+    }
+}
 
 
 
@@ -273,24 +290,30 @@ window.selectRoutingMode = function(mode) {                             // Asett
 
 
 
-function removeRoute() {                                                // Poistaa reittikerroksen sekä asetetut merkit kartalta
+function removeRoute(type) {                                            // Poistaa reittikerroksen sekä asetetut merkit kartalta
     setVerifiedByShortRoute(false);
     setVerifiedByCoordinates(false);
     setVerifiedByScenery(false);
-
+    routeConfirmed = false;
     if (currentRouteLayer) {
         map.removeLayer(currentRouteLayer);
         currentRouteLayer = null;
     }
-    if (startMarker) {
-        map.removeLayer(startMarker);
-        startMarker = null;
+
+    if (type === 'start') {
+        if (startMarker) {
+            map.removeLayer(startMarker);
+            startMarker = null;
+            currentMarkerType = 'start';
+        }
+    } else if (type === 'end') {
+        if (endMarker) {
+            map.removeLayer(endMarker);
+            endMarker = null;
+            currentMarkerType = 'end';
+        }
     }
-    if (endMarker) {
-        map.removeLayer(endMarker);
-        endMarker = null;
-    }
-    currentMarkerType = 'start';
+    document.getElementById('routeDistance').style.display = 'none';
 }
 
 
@@ -460,7 +483,7 @@ async function getRoute(startLat, startLng, endLat, endLng) {           // Reiti
             alert('Yhteysvirhe. Yritä uudelleen.')
             document.getElementById('loading').style.display = 'none';
         }
-        return null;
+    return null;
 }
 
 
@@ -515,12 +538,14 @@ export async function findAlternativeRoute(polygon, originalRoute) {
             } else {
                 console.log('Reitti vahvistettu');                  // Jos reitti vahvistetaan, siirrytään reitin piirtoon
                 setVerifiedByScenery(true);                         // viimeisimmällä reittidatalla
+                routeConfirmed = true;
                 drawRoute(sceneryRoute);
                 return null;
             }
         } else {
             if (routeBackup) {                                      // Jos viimeinen kysely ei palauta vastausta, ja reittikopio on olemassa,
                 console.log('Ei uusia reittejä, piirretään viimeisin reitti');  // piirretään reitti viimeisellä onnistuneella reittihaulla
+                routeConfirmed = true;
                 drawRoute(routeBackup);
                 return null;
             } else {
@@ -825,6 +850,7 @@ function reverseGeocode(lat, lng, callback) {                       // Kääntei
 
 function drawMap(lat, lng, zoomLevel) {                                     // Karttapohjan piirtofunktio
     document.getElementById('map').style.cursor = 'crosshair';
+    const markerMessage = document.getElementById('markerMessage');
     if (map) {                                                              // Jos sivulla on jo kartta, estetään päällekkäisyys poistamalla vanha kartta ennen uuden piirtoa
         map.remove();
     }
@@ -833,7 +859,21 @@ function drawMap(lat, lng, zoomLevel) {                                     // K
         attribution: 'Karttadata<br>&copy <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> Toteutus:<br>Pyykkönen & Toivanen'
     }).addTo(map);
 
+    map.on('mousemove', function(e) {
+        markerMessage.style.left = e.originalEvent.pageX + 10 + 'px';
+        markerMessage.style.top = e.originalEvent.pageY + 10 + 'px';
+        markerMessage.style.display = 'block';
+        markerMessage.innerText = currentMarkerType === 'start' ? "Lähtöpaikka" : "Määränpää";
+    });
+
+    map.on('mouseout', function() {
+        markerMessage.style.display = 'none';
+    });
+
     map.on('click', function(e) {                                           // Tarkistetaan klikkaustapahtumat kartan päällä
+        if (startMarker && endMarker && currentRouteLayer) {
+            removeRoute();
+        }
         if (currentMarkerType === 'start') {                                // Asetetaan koordinaatit muuttujiin klikkausten perusteella
             startLat = e.latlng.lat.toFixed(5);
             startLng = e.latlng.lng.toFixed(5);
@@ -880,12 +920,12 @@ function placeMarker(addressType, lat, lng) {       // Asettaa markerit kartalle
 function placeAddressOnPopups() {
     let bounds = [];
 
-    if (startMarker) {
+    if (currentMarkerType === 'start') {
         startMarker.bindPopup(`<div style="text-align: center;"><b>Lähtöpaikka:</b><br>${startAddress.value}</div>`);
         startMarker.openPopup();
         bounds.push(startMarker.getLatLng());                   // Tallennetaan markereiden koordinaatit listaan
     }
-    if (endMarker) {
+    if (currentMarkerType === 'end') {
         endMarker.bindPopup(`<div style="text-align: center;"><b>Määränpää:</b><br>${endAddress.value}</div>`);
         endMarker.openPopup();
         bounds.push(endMarker.getLatLng());
