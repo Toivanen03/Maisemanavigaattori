@@ -99,7 +99,8 @@ window.onload = function() {                                                // T
 
 
 //      TAPAHTUMAKUUNTELIJAT
-document.addEventListener('DOMContentLoaded', async function() {            
+document.addEventListener('DOMContentLoaded', async function() {
+    document.getElementById('info').classList.toggle('hide')                // Näyttää ohjeet sivun latauksen yhteydessä
     if (!localStorage.getItem('cookiesAccepted')) {                         // Tarkistetaan, onko HEREn evästekäytäntö hyväksytty aiemmin
         document.getElementById('cookie-banner').style.display = 'block';
     }
@@ -125,15 +126,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         currentMarkerType = 'end';
     });
 
-    document.getElementById('startPoint').addEventListener('blur', function() { // Tarkistetaan syöttökentän osoite
+    document.getElementById('startPoint').addEventListener('change', function() { // Tarkistetaan syöttökentän osoite
         checkIfRouteExists();
         map.dragging.enable();                                                  // Estetään kartan raahautuminen, kun ollaan osoitteen syöttökentässä
-        if (startMarker && startMarker.getLatLng().lat.toFixed(5) + ',' + startMarker.getLatLng().lng.toFixed(5) !== startCoords.value) {
-            checkAddress('start');      // If-lauseen tarkistus estää markereiden hyppimisen. Tämä välttämätöntä, koska myös pistettä kartalta valitessa
-        }                               // markerin tyyppi valitaan syöttökenttää klikkaamalla. Ilman tarkistusta lähtee tuplakutsu markereiden asettamiselle.
+        checkAddress('start');
     });
 
-    document.getElementById('endPoint').addEventListener('blur', function() {
+    document.getElementById('endPoint').addEventListener('change', function() {
         checkIfRouteExists();
         map.dragging.enable();
         checkAddress('end');
@@ -319,29 +318,36 @@ function removeRoute(type) {                                            // Poist
 
 
 
-window.handlePermission = function(reply) {                                     // Funktiota kutsutaan HTML-koodin sijaintilupakyselypainikkeilla
+window.handlePermission = function(reply) {                             // Funktiota kutsutaan HTML-koodin sijaintilupakyselypainikkeilla
     let defLat = 61.12;
     let defLng = 25.00;
+    currentMarkerType = 'end';
     document.getElementById('locationQueryBox').style.display = 'none';
-    if (reply === true) {                                                       // Painikkeilta välittyy true tai false
-        currentMarkerType = 'end';
-        navigator.geolocation.getCurrentPosition(                               // Pyydetään selaimelta sijaintitieto, edellyttää käyttäjän myöntämää lupaa
+    if (reply === true) {                                               // Painikkeilta välittyy true tai false
+        getLocation();
+    } else if (reply === false) {                                       // Jos sijaintilupaa ei myönnetä, siitä kerrotaan käyttäjälle ja asetetaan oletussijainti
+        handlePermissionDenied(defLat, defLng, null);
+    } else if (reply === 'update') {
+        endMarker = null;
+        getLocation();
+    }
+
+    function getLocation() {
+        navigator.geolocation.getCurrentPosition(                       // Pyydetään selaimelta sijaintitieto, edellyttää käyttäjän myöntämää lupaa
             function(position) {
                 startLat = position.coords.latitude;
                 startLng = position.coords.longitude;
                 drawMap(startLat, startLng, 18);
                 const latLngString = `${startLat.toFixed(5)},${startLng.toFixed(5)}`;
                 startCoords.value = latLngString;
-                reverseGeocode(startLat, startLng, function(address) {          // Saatu sijainti geokoodataan käänteisesti ja asetetaan osoite tekstinsyöttökenttään ja markeriin
+                reverseGeocode(startLat, startLng, function(address) {  // Saatu sijainti geokoodataan käänteisesti ja asetetaan osoite tekstinsyöttökenttään ja markeriin
                     startAddress.value = address;
                     startMarker = L.marker([startLat, startLng]).addTo(map).bindPopup(`<div style="text-align: center;"><b>Sijaintisi:</b></div><br>${address}`).openPopup();
                 });
             },
-            function(error) {                       // Jos sijaintia ei saada, siitä kerrotaan käyttäjälle, asetetaan oletussijainti ja tulostetaan virhe
+            function(error) {                                           // Jos sijaintia ei saada, siitä kerrotaan käyttäjälle, asetetaan oletussijainti ja tulostetaan virhe
                 locationError(defLat, defLng, error);
             });
-    } else {                                        // Jos sijaintilupaa ei myönnetä, siitä kerrotaan käyttäjälle ja asetetaan oletussijainti
-        handlePermissionDenied(defLat, defLng, null);
     }
 }
 

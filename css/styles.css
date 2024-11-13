@@ -301,9 +301,8 @@ input:checked + .slider:before {
     left: 50%;
     transform: translateX(-50%);
     width: 800px;
-    max-width: 70%;
-    max-height: 90%;
-    z-index: 1005;
+    height: auto;
+    z-index: 9999;
     background-color: rgba(0, 0, 0, 0.8);
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -410,7 +409,7 @@ input:checked + .slider:before {
     top: 40%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 9999;
+    z-index: 8999;
     width: 300px;
     height: auto;
     padding: 20px;

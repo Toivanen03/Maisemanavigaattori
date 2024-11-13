@@ -24,10 +24,12 @@
  
     <div class="video-container hide" id="info">
         <video src="videos/tie.mp4" autoplay loop muted></video>
-        <p class="overlay-text">Verkkoselainpohjainen navigointiohjelma, joka opastaa käyttämään jotain muuta, 
-            kuin nopeinta tai lyhyintä reittiä. Javascriptillä ohjelmoitu koodi pyrkii estämään 
-            reittisuunnittelun moottori- ja maanteitä pitkin, ja opastaa kuljettajan vaihtoehtoisia kiertoteitä 
-            ja pienempien katujen kautta, mikäli vain mahdollista.</p>
+        <p class="overlay-text">Maisemanavigaattori etsii reitin kiertoteiden kautta pääteiden sijaan.<br>
+            <br>Jos haluat vaihtaa lähtöpaikkaa, klikkaa ensin lähtöpaikan osoitekenttää ja valitse kohde kartalta. Valikko aukeaa suurennuslasikuvakkeesta.<br>
+            <br>Voit myös syöttää osoitteet kirjoittamalla. Käynnistä reittihaku lopuksi, kun molemmat kohteet on valittu.<br>
+            <br>Osa toiminnoista on vielä rakenteilla. Saat tämän ohjeen näkyviin<br>viereisen valikon <i>info-</i> kuvakkeesta milloin tahansa.<br><br>
+            <button class="btn btn-outline-dark m-1 close-button" onclick="document.getElementById('info').classList.add('hide')" style="background-color: lightgray;">Sulje</button>
+        </p>
     </div>
     
     <div class="menu">
@@ -45,7 +47,7 @@
                 <img src="images/full.png" alt="fullscreen">
             </div>
             <div class="current-location menu-item">
-                <img id="findMyLocation" src="images/location.png" alt="current-location-icon" onclick="handlePermission(true)">
+                <img id="findMyLocation" src="images/location.png" alt="current-location-icon" onclick="handlePermission('update')">
             </div>
             <div id="test-settings" class="menu-item">
                 <img id="routing-icon" src="images/routing.webp" alt="routing-settings" onclick="routingOptions()">
