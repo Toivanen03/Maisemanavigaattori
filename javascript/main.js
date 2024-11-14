@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     document.getElementById('startPoint').addEventListener('focus', () => { // Asetetaan markerin tyyppi klikatun osoitekentän mukaan
         checkIfRouteExists();
-        map.dragging.disable();
+        map.dragging.disable();                                             // Estetään kartan raahautuminen, kun ollaan osoitteen syöttökentässä
         currentMarkerType = 'start';
     });
 
@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     document.getElementById('startPoint').addEventListener('change', function() { // Tarkistetaan syöttökentän osoite
         checkIfRouteExists();
-        map.dragging.enable();                                                  // Estetään kartan raahautuminen, kun ollaan osoitteen syöttökentässä
+        map.dragging.enable();
         checkAddress('start');
     });
 
@@ -136,6 +136,14 @@ document.addEventListener('DOMContentLoaded', async function() {
         checkIfRouteExists();
         map.dragging.enable();
         checkAddress('end');
+    });
+
+    document.getElementById('startPoint').addEventListener('blur', function() {
+        map.dragging.enable();                                                  // Palautetaan kartan vetäminen
+    });
+
+    document.getElementById('endPoint').addEventListener('blur', function() {
+        map.dragging.enable();
     });
 
     document.getElementById('findRoute').addEventListener('click', function() {             // Reittihakupainikkeen kuuntelu
